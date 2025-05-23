@@ -1,0 +1,14 @@
+{
+  "base-sepolia": {
+    "dataSource": {
+      "address": {}
+    }
+  },
+  "xmtp-appchain-sepolia": {
+    "graphRpc": "https://xmtp-testnet.g.alchemy.com/public",
+    "chainId": 241320161,
+    "dataSource": {
+      "address": {}
+    }
+  }
+}
