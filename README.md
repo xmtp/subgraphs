@@ -41,7 +41,7 @@ Each directory (`settlement-chain-contracts` and `appchain-contracts`) contains 
 
 - Node.js
 - npm or Yarn (Yarn recommended for `workspaces`)
-- [Graph CLI](https://github.com/graphprotocol/graph-cli): Install globally:
+- [Graph CLI](https://github.com/graphprotocol/graph-cli) installed globally:
 
 ```bash
 npm install -g @graphprotocol/graph-cli
@@ -54,8 +54,8 @@ yarn global add @graphprotocol/graph-cli
 1.  **Clone the repository:**
 
 ```bash
-git clone [https://github.com/your-username/your-subgraphs-repo.git](https://github.com/your-username/your-subgraphs-repo.git)
-cd your-subgraphs-repo
+git clone https://github.com/xmtp/subgraphs.git
+cd subgraphs
 ```
 
 2.  **Install dependencies:**
@@ -70,92 +70,113 @@ yarn install
 
 ```text
 DEPLOY_KEY=YOUR_ALCHEMY_DEPLOY_KEY
-VERSION_LABEL=v1.0.0 # e.g., v1.0.0 or CI/CD version
+VERSION_LABEL=v0.3.0 # XMTP contract version or subgraph commit
 ```
 
-4.  **Configure Custom Networks:** Ensure `networks.json` in the project root correctly defines the XMTP Appchain Sepolia's RPC endpoint and chain ID.
+## Development Workflow
+
+### Adding a New Network
+
+1.  **Update `networks.json`:** Add a new entry in the `networks.json` file with the network's RPC endpoint and chain ID. Ensure the `dataSource.address` field contains a placeholder address.
 
     ```json
     {
-      "base-sepolia": {
+      "new-network-name": {
+        "graphRpc": "<new-network-rpc-url>",
+        "chainId": <new-network-chain-id>,
         "dataSource": {
           "address": {
-            "ArbitrumBridgeProxy": "0xd06d8E471F0EeB1bb516303EdE399d004Acb1615"
-          }
-        }
-      },
-      "xmtp-appchain-sepolia": {
-        "graphRpc": "<appchain-rpc-url>",
-        "chainId": 241320161,
-        "dataSource": {
-          "address": {
-            "IdentityUpdateBroadcasterProxy": "0x0000000000000000000000000000000000000000"
+            "ContractName": "0x0000000000000000000000000000000000000000"
           }
         }
       }
     }
     ```
 
-> **Note:** The `dataSource.address` object is not the source of truth for contract addresses, and is simply a convenience for running `codegen`. Current deployment addresses should be maintained in `subgraph.yaml` files.
+2.  **Update `subgraph.yaml`:** In the relevant subgraph project (`settlement-chain-contracts` or `appchain-contracts`), add a new data source to the `subgraph.yaml` file, referencing the network name defined in `networks.json`. Specify the contract address (can be a placeholder initially) and the block number to start indexing from.
 
-## Development Workflow
+    ```yaml
+    dataSources:
+      - kind: ethereum/contract
+        name: ContractName
+        network: new-network-name
+        source:
+          address: '0x0000000000000000000000000000000000000000'
+          abi: ContractName
+          startBlock: 0
+        mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.7
+          language: wasm/assemblyscript
+          entities:
+            - EntityName
+          abis:
+            - name: ContractName
+              file: ./abis/ContractName.json
+          eventHandlers:
+            - event: EventName(address,uint256)
+              handler: handleEventName
+          file: ./src/mappings/mappings.ts
+    ```
 
-### 1. Define Schema
+3.  **Run codegen and build:** Run `npm run codegen` and `npm run build` to generate the necessary code and build the subgraph.
 
-- For each subgraph, define your data entities in `schema.graphql` within its respective directory. Entities should typically have an `id: ID!` field and represent the data you want to query.
+### Adding a New Contract
 
-### 2. Prepare ABIs & Manifest
+1.  **Add the ABI:** Place the contract's ABI JSON file into the `abis/` directory of the relevant subgraph project.
 
-- Place the necessary ABI JSON files for each contract (using the proxy ABI for upgradable contracts) into the `abis/` directory of the relevant subgraph project.
-- Edit `subgraph.yaml` in each project to declare data sources for all contracts you wish to index, including their addresses, ABIs, and event handlers.
-  - **Crucial for Undeployed Contracts**: For contracts not yet deployed, use placeholder addresses like `"0x000..."` and `startBlock: 0`. **These must be updated with actual addresses and deployment block numbers upon contract deployment.**
+2.  **Update `subgraph.yaml`:** Add a new data source to the `subgraph.yaml` file, specifying the contract's address, ABI, and the block number to start indexing from. If the contract is not yet deployed, use a placeholder address and `startBlock: 0`. Remember to update these values after deployment.
 
-### 3. Generate Code
+    ```yaml
+    dataSources:
+      - kind: ethereum/contract
+        name: ContractName
+        network: network-name # e.g., base-sepolia or xmtp-appchain-sepolia
+        source:
+          address: '0xContractAddress'
+          abi: ContractName
+          startBlock: <deployment_block_number>
+        mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.7
+          language: wasm/assemblyscript
+          entities:
+            - EntityName
+          abis:
+            - name: ContractName
+              file: ./abis/ContractName.json
+          eventHandlers:
+            - event: EventName(address,uint256)
+              handler: handleEventName
+          file: ./src/mappings/mappings.ts
+    ```
 
-This step generates AssemblyScript types from your `schema.graphql` and contract ABIs, enabling type-safe mappings. Run from the root directory:
+3.  **Implement Mappings:** Write AssemblyScript mapping functions in `src/mappings/*.ts` to handle events emitted by the new contract.
 
-```bash
-npm run codegen # or yarn codegen
-# This runs:
-# npm run codegen:base-sepolia
-# npm run codegen:xmtp-appchain-sepolia
-```
+4.  **Run codegen and build:** Run `npm run codegen` and `npm run build` to generate the necessary code and build the subgraph.
 
-### 4. Implement Mappings
+> **Note on Proxy Contracts:**
+>
+> - The `source.address` should be the address of the **proxy deployment**
+> - The `source.abi` should be the ABI of the **implementation deployment**
 
-Write your AssemblyScript mapping functions in `src/mappings/*.ts` within each subgraph directory. These functions process blockchain events and transform them into entities defined in your `schema.graphql`.
+### Deploying a New Subgraph Version
 
-### 5. Build Subgraphs
+1.  **Update `subgraph.yaml` and/or Mappings:** Make the necessary changes in either the `subgraph.yaml` file (e.g., updating contract addresses or adding new event handlers) or by updating the mapping functions in the `src/mappings/` directory.
 
-Compile your subgraphs to WebAssembly. Run from the root directory:
+2.  **Build the Subgraph:** Run `npm run build` (or `yarn build`) from the root directory to compile your subgraph to WebAssembly.
 
-```bash
-npm run build # or yarn build
-# This runs:
-# npm run build:base-sepolia
-# npm run build:xmtp-appchain-sepolia
-```
+3.  **Deploy the New Version:** Use the deploy scripts, ensuring you have the correct subgraph slug and Alchemy deploy key. A new version of your subgraph will be created on Alchemy.
 
-### 6. Deploy Subgraphs
+    ```bash
+    npm run deploy:base-sepolia
+    # Replace <YOUR_BASE_SEPOLIA_SUBGRAPH_SLUG> with your actual slug.
 
-Before deploying, create corresponding subgraph projects on Alchemy's Subgraph hosting platform and note down their unique slugs.
-Deploy from the root directory:
+    npm run deploy:xmtp-appchain-sepolia
+    # Replace <YOUR_XMTP_APPCHAIN_SUBGRAPH_SLUG> with your actual slug.
+    ```
 
-**Base Sepolia Subgraph:**
-
-```bash
-npm run deploy:base-sepolia
-# Replace <YOUR_BASE_SEPOLIA_SUBGRAPH_SLUG> with your actual slug.
-```
-
-**XMTP Appchain Sepolia Subgraph:**
-
-```bash
-npm run deploy:xmtp-appchain-sepolia
-# Replace <YOUR_XMTP_APPCHAIN_SUBGRAPH_SLUG> with your actual slug.
-```
-
-Upon successful deployment, The Graph Node will begin indexing data from the specified `startBlock` for each data source. Subsequent deployments with changes to `subgraph.yaml` or mappings will create new versions of your existing subgraph on Alchemy.
+    Subsequent deployments with changes to `subgraph.yaml` or mappings will create new versions of your existing subgraph on Alchemy.
 
 ## Querying Data
 
