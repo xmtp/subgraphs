@@ -2,7 +2,7 @@
 
 ![XMTP Banner](.github/xmtp-banner.png)
 
-This repository contains subgraphs for comprehensive event listening of XMTP smart contracts. This indexed data can be consumed by apps, enabling real-time UI updates, historical data analysis, and overall enhanced user experience without directly querying raw blockchain data.
+This repository contains subgraphs for event listening of XMTP smart contracts related to payer services. This indexed data can be consumed by apps, enabling real-time UI updates, historical data analysis, and overall enhanced user experience without directly querying raw blockchain data.
 
 ## Key Technologies
 
@@ -40,7 +40,7 @@ Each directory (`settlement-chain-contracts` and `appchain-contracts`) contains 
 ### Prerequisites
 
 - Node.js
-- npm or Yarn
+- npm or Yarn (Yarn recommended for `workspaces`)
 - [Graph CLI](https://github.com/graphprotocol/graph-cli): Install globally:
 
 ```bash
@@ -96,7 +96,7 @@ VERSION_LABEL=v1.0.0 # e.g., v1.0.0 or CI/CD version
     }
     ```
 
-> **Note:** The `dataSource.address` object is not the source of truth for contract addresses, and is used as a convenience for running `codegen`. Current deployment addresses are contained in `subgraph.yaml` files.
+> **Note:** The `dataSource.address` object is not the source of truth for contract addresses, and is simply a convenience for running `codegen`. Current deployment addresses should be maintained in `subgraph.yaml` files.
 
 ## Development Workflow
 
