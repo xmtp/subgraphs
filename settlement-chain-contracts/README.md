@@ -10,32 +10,6 @@ The settlement chain subgraph tracks the following contracts:
 - **RateRegistry** (`0xe9Fb03945475587B03eA28b8118E2bc5B753E3E9`) - Rate management
 - **Erc20Inbox** (`0xd06d8E471F0EeB1bb516303EdE399d004Acb1615`) - Bridge operations (Base → XMTP)
 
-## Key Features
-
-### Balance Tracking
-
-- Real-time payer balance updates
-- Deposit, withdrawal, and usage settlement tracking
-- Historical balance changes
-
-### Transaction History
-
-- Complete transaction lifecycle tracking
-- Withdrawal request, cancellation, and finalization
-- Usage settlement records
-
-### Rate Management
-
-- Current and historical rate tracking
-- Message fee, storage fee, and congestion fee monitoring
-- Total cost per message calculations
-
-### Bridge Operations
-
-- Cross-chain transaction tracking
-- Bridge status monitoring
-- Message number correlation for Arbitrum bridge
-
 ## Entities
 
 ### Core Entities
@@ -199,7 +173,7 @@ npm run test
 
 - **Network**: Base Sepolia
 - **Chain ID**: 84532
-- **Graph Node**: The Graph Studio or local Graph Node
+- **Graph Node**: Alchemy or local
 
 ## Contributing
 

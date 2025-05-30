@@ -10,26 +10,6 @@ The appchain subgraph tracks the following contracts:
 - **IdentityUpdateBroadcaster** (`0x2c7A0c3856ca0CC9bf339E19fE25ca4c1f57A567`) - Identity update tracking
 - **ArbSys** (`0x0000000000000000000000000000000000000064`) - Bridge operations (XMTP → Base)
 
-## Key Features
-
-### Message Tracking
-
-- Group message and identity update monitoring
-- Message size and cost calculation
-- Sequence ID tracking for message ordering
-
-### Usage Analytics
-
-- Per-user message statistics
-- Daily and global message analytics
-- Cost tracking and analysis
-
-### Bridge Operations
-
-- L2 to L1 bridge transaction tracking
-- Cross-chain transaction correlation
-- Bridge status and timing information
-
 ## Entities
 
 ### Core Entities
@@ -204,6 +184,8 @@ npm run test
 
 The subgraph includes a placeholder cost calculation function that estimates message costs based on:
 
+@todo: update from 0.4.0 defaults
+
 - Base fee: 10,000 wei
 - Per-byte fee: 1,000 wei per byte
 
@@ -230,7 +212,7 @@ In production, this should be replaced with actual rate queries from the settlem
 - **Network**: XMTP Sepolia
 - **Chain ID**: 241320161
 - **Graph RPC**: https://xmtp-testnet.g.alchemy.com/public
-- **Graph Node**: The Graph Studio or local Graph Node
+- **Graph Node**: Alchemy or local
 
 ## Cross-Chain Integration
 
@@ -251,6 +233,8 @@ When adding new features:
 5. Test thoroughly before deployment
 
 ## Performance Considerations
+
+@todo: optimize performance
 
 - Message data can grow rapidly - consider data retention policies
 - Daily statistics are pre-aggregated for efficient querying
