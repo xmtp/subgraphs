@@ -1,0 +1,152 @@
+# XMTP Payer Portal - Settlement Chain (Base Sepolia) Schema
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL_REQUEST
+  WITHDRAWAL_CANCEL
+  WITHDRAWAL_FINALIZE
+  USAGE_SETTLEMENT
+}
+
+enum WithdrawalStatus {
+  PENDING
+  READY
+  CANCELLED
+  FINALIZED
+}
+
+enum BridgeDirection {
+  BASE_TO_XMTP
+  XMTP_TO_BASE
+}
+
+enum BridgeStatus {
+  PENDING
+  CONFIRMED
+  READY_TO_CLAIM
+  CLAIMED
+}
+
+# PayerRegistry Transaction Events
+type PayerRegistryTransaction @entity {
+  id: ID! # txHash-logIndex
+  type: TransactionType!
+  payer: Bytes!
+  amount: BigInt # Optional for some transaction types
+  withdrawableTimestamp: BigInt # Only for withdrawal requests
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  logIndex: BigInt!
+}
+
+# Payer Balance Tracking
+type PayerBalance @entity {
+  id: ID! # payer address
+  payer: Bytes!
+  currentBalance: BigInt! # Can be negative (debt)
+  totalDeposited: BigInt!
+  totalWithdrawn: BigInt!
+  totalUsageSettled: BigInt!
+  lastUpdatedBlock: BigInt!
+  lastUpdatedTimestamp: BigInt!
+}
+
+# Pending Withdrawal Tracking
+type PendingWithdrawal @entity {
+  id: ID! # payer address
+  payer: Bytes!
+  amount: BigInt!
+  withdrawableTimestamp: BigInt!
+  requestedAt: BigInt!
+  requestTxHash: Bytes!
+  status: WithdrawalStatus!
+}
+
+# Rate Registry Events
+type RateUpdate @entity {
+  id: ID! # txHash-logIndex
+  messageFee: BigInt!
+  storageFee: BigInt!
+  congestionFee: BigInt!
+  targetRatePerMinute: BigInt!
+  totalCostPerMessage: BigInt! # Calculated: messageFee + storageFee + congestionFee
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+# Current Rate Singleton
+type CurrentRate @entity {
+  id: ID! # "current"
+  messageFee: BigInt!
+  storageFee: BigInt!
+  congestionFee: BigInt!
+  targetRatePerMinute: BigInt!
+  totalCostPerMessage: BigInt!
+  lastUpdated: BigInt!
+}
+
+# Bridge Transaction Tracking (Settlement Chain Side)
+type BridgeTransaction @entity {
+  id: ID! # txHash-logIndex for originating transaction
+  direction: BridgeDirection!
+  user: Bytes!
+  amount: BigInt!
+  status: BridgeStatus!
+  sourceChain: String!
+  targetChain: String!
+  sourceTxHash: Bytes!
+  targetTxHash: Bytes # Set when bridge is completed/claimed
+  messageNum: BigInt # For Arbitrum bridge tracking
+  claimableAt: BigInt # When bridge can be claimed (for XMTP->Base)
+  initiatedAt: BigInt!
+  completedAt: BigInt
+  sourceBlockNumber: BigInt!
+  targetBlockNumber: 
+}
+
+# USDC Token Transfer Tracking
+type USDCTransfer @entity {
+  id: ID! # txHash-logIndex
+  from: Bytes!
+  to: Bytes!
+  value: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  logIndex: BigInt!
+  relatedTo: String # "BRIDGE", "PAYER_REGISTRY_DEPOSIT", "OTHER"
+}
+
+# USDC Balance Tracking
+type USDCBalance @entity {
+  id: ID! # user address
+  user: Bytes!
+  balance: BigInt!
+  lastUpdatedBlock: BigInt!
+  lastUpdatedTimestamp: BigInt!
+}
+
+# Cross-chain transaction linking
+type CrossChainTransaction @entity {
+  id: ID!
+  baseTransaction: Bytes # Transaction hash on Base
+  xmtpTransaction: Bytes # Related transaction hash on XMTP
+  type: String! # "BRIDGE", "MESSAGE_SETTLEMENT"
+  user: Bytes!
+  status: String!
+  initiatedAt: BigInt!
+  completedAt: BigInt
+}
+
+# Daily statistics for analytics
+type DailyStats @entity {
+  id: ID! # date (YYYY-MM-DD)
+  date: String! # YYYY-MM-DD
+  totalDeposits: BigInt!
+  totalWithdrawals: BigInt!
+  totalUsageSettled: BigInt!
+  uniqueUsers: BigInt!
+  totalTransactions: BigInt!
+}

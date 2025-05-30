@@ -1,0 +1,78 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  # GroupMessageBroadcaster Contract - Group message tracking
+  - kind: ethereum
+    name: GroupMessageBroadcaster
+    network: xmtp-appchain-sepolia
+    source:
+      address: '0x8c5908AFbd1a5C25590D78eC7Bb0422262BDE6a1'
+      abi: GroupMessageBroadcaster
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Message
+        - MessageStats
+        - DailyMessageStats
+        - GlobalMessageStats
+        - DailyGlobalStats
+      abis:
+        - name: GroupMessageBroadcaster
+          file: ./abis/GroupMessageBroadcaster.abi.json
+      eventHandlers:
+        - event: MessageSent(indexed bytes32,bytes,indexed uint64)
+          handler: handleMessageSent
+      file: ./src/groupMessageBroadcaster.ts
+
+  # IdentityUpdateBroadcaster Contract - Identity update tracking
+  - kind: ethereum
+    name: IdentityUpdateBroadcaster
+    network: xmtp-appchain-sepolia
+    source:
+      address: '0x2c7A0c3856ca0CC9bf339E19fE25ca4c1f57A567'
+      abi: IdentityUpdateBroadcaster
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Message
+        - MessageStats
+        - DailyMessageStats
+        - GlobalMessageStats
+        - DailyGlobalStats
+      abis:
+        - name: IdentityUpdateBroadcaster
+          file: ./abis/IdentityUpdateBroadcaster.abi.json
+      eventHandlers:
+        - event: IdentityUpdateCreated(indexed bytes32,bytes,indexed uint64)
+          handler: handleIdentityUpdateCreated
+      file: ./src/identityUpdateBroadcaster.ts
+
+  # ArbSys Contract - Bridge transaction tracking (XMTP -> Base)
+  - kind: ethereum
+    name: ArbSys
+    network: xmtp-appchain-sepolia
+    source:
+      address: '0x0000000000000000000000000000000000000064'
+      abi: ArbSys
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BridgeTransaction
+        - CrossChainTransaction
+      abis:
+        - name: ArbSys
+          file: ./abis/ArbSys.abi.json
+      eventHandlers:
+        - event: L2ToL1Transaction(address,indexed address,indexed uint256,indexed uint256,uint256,uint256,uint256,uint256,bytes)
+          handler: handleL2ToL1Transaction
+      file: ./src/arbSys.ts
