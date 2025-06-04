@@ -16,9 +16,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - PayerRegistryTransaction
-        - PayerBalance
+        - DailyPayerStats
         - PendingWithdrawal
-        - DailyStats
       abis:
         - name: PayerRegistry
           file: ./abis/PayerRegistry.abi.json

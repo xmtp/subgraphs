@@ -17,14 +17,15 @@ dataSources:
       entities:
         - Message
         - MessageStats
-        - GlobalMessageStats
-        - DailyGlobalStats
+        - DailyPayerMessageStats
+        - BridgeTransaction
       abis:
         - name: GroupMessageBroadcaster
           file: ./abis/GroupMessageBroadcaster.abi.json
       eventHandlers:
         - event: MessageSent(indexed bytes32,bytes,indexed uint64)
           handler: handleMessageSent
+          # @note: events below here not needed for payer portal, include if they will be useful elsewhere, otherwise no need
         - event: MaxPayloadSizeUpdated(indexed uint256)
           handler: handleMaxPayloadSizeUpdated
         - event: MinPayloadSizeUpdated(indexed uint256)
@@ -50,14 +51,14 @@ dataSources:
       entities:
         - Message
         - MessageStats
-        - GlobalMessageStats
-        - DailyGlobalStats
+        - DailyPayerMessageStats
       abis:
         - name: IdentityUpdateBroadcaster
           file: ./abis/IdentityUpdateBroadcaster.abi.json
       eventHandlers:
         - event: IdentityUpdateCreated(indexed bytes32,bytes,indexed uint64)
           handler: handleIdentityUpdateCreated
+          # @note: events below here not needed for payer portal, include if they will be useful elsewhere, otherwise no need
         - event: MaxPayloadSizeUpdated(indexed uint256)
           handler: handleMaxPayloadSizeUpdated
         - event: MinPayloadSizeUpdated(indexed uint256)
