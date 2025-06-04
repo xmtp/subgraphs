@@ -1,0 +1,94 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  # GroupMessageBroadcaster Contract
+  - kind: ethereum
+    name: GroupMessageBroadcaster
+    network: xmtp-appchain-sepolia
+    source:
+      address: '0x3e1093E91Cde49736841B2413ca1f1094e030F6F'
+      abi: GroupMessageBroadcaster
+      startBlock: 0 # @todo: Update to actual deployment block for faster sync
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Message
+        - MessageStats
+        - DailyPayerMessageStats
+        - BridgeTransaction
+      abis:
+        - name: GroupMessageBroadcaster
+          file: ./abis/GroupMessageBroadcaster.abi.json
+      eventHandlers:
+        - event: MessageSent(indexed bytes32,bytes,indexed uint64)
+          handler: handleMessageSent
+          # @note: events below here not needed for payer portal, include if they will be useful elsewhere, otherwise no need
+        - event: MaxPayloadSizeUpdated(indexed uint256)
+          handler: handleMaxPayloadSizeUpdated
+        - event: MinPayloadSizeUpdated(indexed uint256)
+          handler: handleMinPayloadSizeUpdated
+        - event: Migrated(indexed address)
+          handler: handleMigrated
+        - event: Initialized(uint64)
+          handler: handleInitialized
+      file: ./src/groupMessageBroadcaster.ts
+
+  # IdentityUpdateBroadcaster Contract
+  - kind: ethereum
+    name: IdentityUpdateBroadcaster
+    network: xmtp-appchain-sepolia
+    source:
+      address: '0x0A6A935837b4a2038d8fEce99cd5741545248F5A'
+      abi: IdentityUpdateBroadcaster
+      startBlock: 0 # @todo: Update to actual deployment block for faster sync
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Message
+        - MessageStats
+        - DailyPayerMessageStats
+      abis:
+        - name: IdentityUpdateBroadcaster
+          file: ./abis/IdentityUpdateBroadcaster.abi.json
+      eventHandlers:
+        - event: IdentityUpdateCreated(indexed bytes32,bytes,indexed uint64)
+          handler: handleIdentityUpdateCreated
+          # @note: events below here not needed for payer portal, include if they will be useful elsewhere, otherwise no need
+        - event: MaxPayloadSizeUpdated(indexed uint256)
+          handler: handleMaxPayloadSizeUpdated
+        - event: MinPayloadSizeUpdated(indexed uint256)
+          handler: handleMinPayloadSizeUpdated
+        - event: Migrated(indexed address)
+          handler: handleMigrated
+        - event: Initialized(uint64)
+          handler: handleInitialized
+      file: ./src/identityUpdateBroadcaster.ts
+
+  # ArbSys Contract - Bridge transaction tracking (XMTP -> Base)
+  - kind: ethereum
+    name: ArbSys
+    network: xmtp-appchain-sepolia
+    source:
+      address: '0x0000000000000000000000000000000000000064'
+      abi: ArbSys
+      startBlock: 0 # @todo: Update to reasonable block for faster sync
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BridgeTransaction
+      abis:
+        - name: ArbSys
+          file: ./abis/ArbSys.abi.json
+      eventHandlers:
+        - event: L2ToL1Transaction(address,indexed address,indexed uint256,indexed uint256,uint256,uint256,uint256,uint256,bytes)
+          handler: handleL2ToL1Transaction
+        - event: L2ToL1Tx(address,indexed address,indexed uint256,indexed uint256,uint256,uint256,uint256,uint256,bytes)
+          handler: handleL2ToL1Tx
+      file: ./src/arbSys.ts
