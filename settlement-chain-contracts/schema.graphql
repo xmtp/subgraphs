@@ -87,10 +87,11 @@ type BridgeTransaction @entity {
   payer: Bytes!
   amount: BigInt!
   status: BridgeStatus!
-  sourceTxHash: Bytes!
+  transactionHash: Bytes!
   messageNum: BigInt!
   initiatedAt: BigInt!
-  sourceBlockNumber: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
 }
 
 # Per-payer daily statistics for analytics
