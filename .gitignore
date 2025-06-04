@@ -2,7 +2,7 @@
 */tests/.latest.json
 
 node_modules/
-*/node_modules/
+**/node_modules/
 
 .env
 .env.*

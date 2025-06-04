@@ -2,12 +2,12 @@ specVersion: 0.0.5
 schema:
   file: ./schema.graphql
 dataSources:
-  # PayerRegistry Contract - Balance and transaction tracking
+  # PayerRegistry Contract
   - kind: ethereum
     name: PayerRegistry
     network: base-sepolia
     source:
-      address: '0x95E856F1542EB9Eb1BFB6019f0D438584b1652ed'
+      address: '0x3Ce54917177666d1a331fbb3F208a3B91218EC00'
       abi: PayerRegistry
       startBlock: 0 # @todo: Update to actual deployment block for faster sync
     mapping:
@@ -35,12 +35,12 @@ dataSources:
           handler: handleUsageSettled
       file: ./src/payerRegistry.ts
 
-  # RateRegistry Contract - Rate tracking
+  # RateRegistry Contract
   - kind: ethereum
     name: RateRegistry
     network: base-sepolia
     source:
-      address: '0xe9Fb03945475587B03eA28b8118E2bc5B753E3E9'
+      address: '0xdF3F8523FCdd590ec81d84b2eE0980E461D6d0f4'
       abi: RateRegistry
       startBlock: 0 # @todo: Update to actual deployment block for faster sync
     mapping:
@@ -72,7 +72,6 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - BridgeTransaction
-        - CrossChainTransaction
       abis:
         - name: Erc20Inbox
           file: ./abis/Erc20Inbox.abi.json
@@ -81,30 +80,4 @@ dataSources:
           handler: handleInboxMessageDelivered
         - event: InboxMessageDeliveredFromOrigin(indexed uint256)
           handler: handleInboxMessageDeliveredFromOrigin
-      file: ./src/bridgeInbox.ts
-
-templates:
-  # USDC Token Template - For tracking specific USDC transfers
-  # @todo: Consider if template approach is needed or if direct data source is sufficient
-  # @todo: Add instantiation logic in event handlers to create USDC tracking instances
-  - kind: ethereum/contract
-    name: ERC20Token
-    network: base-sepolia
-    source:
-      abi: ERC20
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.7
-      language: wasm/assemblyscript
-      entities:
-        - USDCTransfer
-        - USDCBalance
-      abis:
-        - name: ERC20
-          file: ./abis/ERC20.abi.json
-      eventHandlers:
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
-        - event: Approval(indexed address,indexed address,uint256)
-          handler: handleApproval
-      file: ./src/erc20.ts
+      file: ./src/erc20Inbox.ts
