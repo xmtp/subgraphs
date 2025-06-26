@@ -1,14 +1,32 @@
 {
-  "name": "xmtp-appchain-subgraph",
-  "version": "1.0.0",
-  "description": "XMTP Payer Portal Appchain (XMTP Sepolia) Subgraph",
-  "scripts": {
-    "codegen": "graph codegen",
-    "build": "graph build",
-    "deploy": "graph deploy <YOUR_XMTP_APPCHAIN_SUBGRAPH_SLUG> --network xmtp-appchain-sepolia --version-label $(grep VERSION_LABEL .env | cut -d '=' -f2) --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key $(grep DEPLOY_KEY .env | cut -d '=' -f2)",
-    "create-local": "graph create --node http://localhost:8020/ xmtp-appchain",
-    "remove-local": "graph remove --node http://localhost:8020/ xmtp-appchain",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 xmtp-appchain",
-    "test": "graph test"
-  }
+    "name": "xmtp-app-chain-subgraph",
+    "license": "UNLICENSED",
+    "version": "0.1.0",
+    "description": "XMTP Settlement Chain Subgraphs",
+    "scripts": {
+        "codegen:testnet-dev": "graph codegen testnet-dev.yaml",
+        "codegen:testnet-staging": "graph codegen testnet-staging.yaml",
+        "codegen:testnet": "graph codegen testnet.yaml",
+        "build:testnet-dev": "graph build testnet-dev.yaml",
+        "build:testnet-staging": "graph build testnet-staging.yaml",
+        "build:testnet": "graph build testnet.yaml",
+        "deploy:testnet-dev": "graph deploy app-chain-testnet-dev testnet-dev.yaml --version-label $(grep VERSION_LABEL .env | cut -d '=' -f2) --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key $(grep DEPLOY_KEY .env | cut -d '=' -f2)",
+        "deploy:testnet-staging": "graph deploy app-chain-testnet-staging testnet-staging.yaml --version-label $(grep VERSION_LABEL .env | cut -d '=' -f2) --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key $(grep DEPLOY_KEY .env | cut -d '=' -f2)",
+        "deploy:testnet": "graph deploy app-chain-testnet testnet.yaml --version-label $(grep VERSION_LABEL .env | cut -d '=' -f2) --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key $(grep DEPLOY_KEY .env | cut -d '=' -f2)",
+        "create-local": "graph create --node http://localhost:8020/ xmtp/app-chain",
+        "remove-local": "graph remove --node http://localhost:8020/ xmtp/app-chain",
+        "deploy-local": "graph deploy --node http://localhost:8020/ xmtp/app-chain",
+        "test": "graph test",
+        "prettier": "prettier --write 'src/**/*.ts' '*.yaml' '*.yml' '*.json'"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@graphprotocol/graph-cli": "^0.97.1",
+        "@graphprotocol/graph-ts": "^0.38.1",
+        "dotenv": "^16.5.0",
+        "prettier": "^3.5.3"
+    },
+    "engines": {
+        "node": ">=23.2.0"
+    }
 }
