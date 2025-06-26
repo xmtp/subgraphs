@@ -1,0 +1,14 @@
+{
+  "name": "xmtp-appchain-subgraph",
+  "version": "1.0.0",
+  "description": "XMTP Payer Portal Appchain (XMTP Sepolia) Subgraph",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy <YOUR_XMTP_APPCHAIN_SUBGRAPH_SLUG> --network xmtp-appchain-sepolia --version-label $(grep VERSION_LABEL .env | cut -d '=' -f2) --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key $(grep DEPLOY_KEY .env | cut -d '=' -f2)",
+    "create-local": "graph create --node http://localhost:8020/ xmtp-appchain",
+    "remove-local": "graph remove --node http://localhost:8020/ xmtp-appchain",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 xmtp-appchain",
+    "test": "graph test"
+  }
+}

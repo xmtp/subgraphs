@@ -1,0 +1,429 @@
+# ============ Generic - Snapshot Interfaces ============ #
+
+interface SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+}
+
+interface IntSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    value: Int!
+}
+
+interface BigIntSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    value: BigInt!
+}
+
+interface TimestampSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    value: Timestamp!
+}
+
+interface StringSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    value: String!
+}
+
+interface BooleanSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    value: Boolean!
+}
+
+# ============ Payer - Snapshot Interfaces ============ #
+
+interface PayerSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+}
+
+# ============ Payer - State Variable Snapshots ============ #
+
+type PayerRegistryBalanceSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+    value: BigInt!
+}
+
+type PayerRegistryPendingWithdrawalSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+    value: BigInt!
+}
+
+type PayerRegistryWithdrawableTimestampSnapshot implements PayerSnapshotEntity & TimestampSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+    value: Timestamp!
+}
+
+# ============ Payer - Lifetime Total Snapshots ============ #
+
+type PayerRegistryDepositedSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+    value: BigInt!
+}
+
+type PayerRegistryIncurredDebtSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+    value: BigInt!
+}
+
+type PayerRegistryRepaidDebtSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+    value: BigInt!
+}
+
+type PayerRegistryWithdrawnSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+    value: BigInt!
+}
+
+type PayerRegistryUsageSettledSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payer: Payer! @index
+    value: BigInt!
+}
+
+# ============ Payer - Event Entities ============ #
+
+type PayerRegistryDeposit @entity(immutable: true) {
+    id: ID! @unique
+    payerRegistry: PayerRegistry! @index
+    payer: Payer! @index
+    amount: BigInt!
+    timestamp: Timestamp!
+    transactionHash: String!
+    logIndex: BigInt!
+}
+
+type PayerRegistryWithdrawal @entity(immutable: false) {
+    id: ID! @unique
+    payerRegistry: PayerRegistry! @index
+    payer: Payer! @index
+    amount: BigInt!
+    requestTimestamp: Timestamp!
+    requestTransactionHash: String!
+    requestLogIndex: BigInt!
+    cancelTimestamp: Timestamp
+    cancelTransactionHash: String
+    cancelLogIndex: BigInt
+    finalizeTimestamp: Timestamp
+    finalizeTransactionHash: String
+    finalizeLogIndex: BigInt
+}
+
+type PayerRegistryUsageSettlement @entity(immutable: true) {
+    id: ID! @unique
+    payer: Payer! @index
+    amount: BigInt!
+    batchUsageSettlement: PayerRegistryBatchUsageSettlement! @index
+    logIndex: BigInt!
+}
+
+# ============ Payer - Entity ============ #
+
+type Payer @entity(immutable: false) {
+    # Entity Properties
+    id: ID! @unique
+    lastUpdate: Timestamp!
+    address: String! @unique
+    payerRegistry: PayerRegistry! @index
+
+    # State Variables (and snapshots)
+    balance: BigInt!
+    balanceSnapshots: [PayerRegistryBalanceSnapshot!] @derivedFrom(field: "payer")
+    pendingWithdrawal: BigInt!
+    pendingWithdrawalSnapshots: [PayerRegistryPendingWithdrawalSnapshot!] @derivedFrom(field: "payer")
+    withdrawableTimestamp: Timestamp!
+    withdrawableTimestampSnapshots: [PayerRegistryWithdrawableTimestampSnapshot!] @derivedFrom(field: "payer")
+
+    # Lifetime Totals (and snapshots)
+    deposited: BigInt!
+    depositedSnapshots: [PayerRegistryDepositedSnapshot!] @derivedFrom(field: "payer")
+    incurredDebt: BigInt!
+    incurredDebtSnapshots: [PayerRegistryIncurredDebtSnapshot!] @derivedFrom(field: "payer")
+    repaidDebt: BigInt!
+    repaidDebtSnapshots: [PayerRegistryRepaidDebtSnapshot!] @derivedFrom(field: "payer")
+    withdrawn: BigInt!
+    withdrawnSnapshots: [PayerRegistryWithdrawnSnapshot!] @derivedFrom(field: "payer")
+    usageSettled: BigInt!
+    usageSettledSnapshots: [PayerRegistryUsageSettledSnapshot!] @derivedFrom(field: "payer")
+
+    # Event Entities
+    deposits: [PayerRegistryDeposit!] @derivedFrom(field: "payer")
+    withdrawals: [PayerRegistryWithdrawal!] @derivedFrom(field: "payer")
+    usageSettlements: [PayerRegistryUsageSettlement!] @derivedFrom(field: "payer")
+}
+
+# ============ PayerRegistry - Snapshot Interfaces ============ #
+
+interface PayerRegistrySnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payerRegistry: PayerRegistry! @index
+}
+
+# ============ PayerRegistry - State Variable Snapshots ============ #
+
+type PayerRegistryPausedSnapshot implements PayerRegistrySnapshotEntity & BooleanSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: Boolean!
+}
+
+type PayerRegistryTotalDepositsSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryTotalDebtSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryWithdrawLockPeriodSnapshot implements PayerRegistrySnapshotEntity & IntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: Int!
+}
+
+type PayerRegistryMinimumDepositSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistrySettlerSnapshot implements PayerRegistrySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: String!
+}
+
+type PayerRegistryFeeDistributorSnapshot implements PayerRegistrySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: String!
+}
+
+# ============ PayerRegistry - Computed Variables Snapshots ============ #
+
+type PayerRegistryTotalWithdrawableSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryExcessSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+# ============ PayerRegistry - Token Balance Snapshots ============ #
+
+type PayerRegistryFeeTokenBalanceSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+# ============ PayerRegistry - Aggregator Snapshots ============ #
+
+type PayerRegistryTotalBalanceSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryTotalPendingWithdrawalsSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+# ============ PayerRegistry - Lifetime Total Snapshots ============ #
+
+type PayerRegistryTotalDepositedSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryTotalRepaidDebtSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryTotalIncurredDebtSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryTotalWithdrawnSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryTotalUsageSettledSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+type PayerRegistryTotalExcessTransferredSnapshot implements PayerRegistrySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: true) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    payerRegistry: PayerRegistry! @index
+    value: BigInt!
+}
+
+# ============ PayerRegistry - Event Entities ============ #
+
+type PayerRegistryBatchUsageSettlement @entity(immutable: true) {
+    id: ID! @unique
+    payerRegistry: PayerRegistry! @index
+    usageSettlements: [PayerRegistryUsageSettlement!] @derivedFrom(field: "batchUsageSettlement")
+    amount: BigInt!
+    timestamp: Timestamp!
+    transactionHash: String! @index
+}
+
+type PayerRegistryExcessTransfer @entity(immutable: true) {
+    id: ID! @unique
+    payerRegistry: PayerRegistry! @index
+    amount: BigInt!
+    timestamp: Timestamp!
+    transactionHash: String! @index
+    logIndex: BigInt!
+}
+
+# ============ PayerRegistry - Entity ============ #
+
+type PayerRegistry @entity(immutable: false) {
+    # Entity Properties
+    id: ID! @unique
+    lastUpdate: Timestamp!
+
+    # State Variable Mappings
+    payers: [Payer!] @derivedFrom(field: "payerRegistry")
+
+    # State Variables (and snapshots)
+    paused: Boolean!
+    pausedSnapshots: [PayerRegistryPausedSnapshot!] @derivedFrom(field: "payerRegistry")
+    totalDeposits: BigInt!
+    totalDepositsSnapshots: [PayerRegistryTotalDepositsSnapshot!] @derivedFrom(field: "payerRegistry")
+    totalDebt: BigInt!
+    totalDebtSnapshots: [PayerRegistryTotalDebtSnapshot!] @derivedFrom(field: "payerRegistry")
+    withdrawLockPeriod: Int!
+    withdrawLockPeriodSnapshots: [PayerRegistryWithdrawLockPeriodSnapshot!] @derivedFrom(field: "payerRegistry")
+    minimumDeposit: BigInt!
+    minimumDepositSnapshots: [PayerRegistryMinimumDepositSnapshot!] @derivedFrom(field: "payerRegistry")
+    settler: String!
+    settlerSnapshots: [PayerRegistrySettlerSnapshot!] @derivedFrom(field: "payerRegistry")
+    feeDistributor: String!
+    feeDistributorSnapshots: [PayerRegistryFeeDistributorSnapshot!] @derivedFrom(field: "payerRegistry")
+
+    # Token Balances (and snapshots)
+    feeTokenBalance: BigInt!
+    feeTokenBalanceSnapshots: [PayerRegistryFeeTokenBalanceSnapshot!] @derivedFrom(field: "payerRegistry")
+
+    # Computed Variables (and snapshots)
+    totalWithdrawable: BigInt!
+    totalWithdrawableSnapshots: [PayerRegistryTotalWithdrawableSnapshot!] @derivedFrom(field: "payerRegistry")
+    excess: BigInt!
+    excessSnapshots: [PayerRegistryExcessSnapshot!] @derivedFrom(field: "payerRegistry")
+
+    # Aggregators (and snapshots)
+    totalBalances: BigInt!
+    totalBalancesSnapshots: [PayerRegistryTotalBalanceSnapshot!] @derivedFrom(field: "payerRegistry")
+    totalPendingWithdrawals: BigInt!
+    totalPendingWithdrawalsSnapshots: [PayerRegistryTotalPendingWithdrawalsSnapshot!]
+        @derivedFrom(field: "payerRegistry")
+
+    # Lifetime Totals (and snapshots)
+    totalDeposited: BigInt!
+    totalDepositedSnapshots: [PayerRegistryTotalDepositedSnapshot!] @derivedFrom(field: "payerRegistry")
+    totalIncurredDebt: BigInt!
+    totalIncurredDebtSnapshots: [PayerRegistryTotalIncurredDebtSnapshot!] @derivedFrom(field: "payerRegistry")
+    totalRepaidDebt: BigInt!
+    totalRepaidDebtSnapshots: [PayerRegistryTotalRepaidDebtSnapshot!] @derivedFrom(field: "payerRegistry")
+    totalWithdrawn: BigInt!
+    totalWithdrawnSnapshots: [PayerRegistryTotalWithdrawnSnapshot!] @derivedFrom(field: "payerRegistry")
+    totalUsageSettled: BigInt!
+    totalUsageSettledSnapshots: [PayerRegistryTotalUsageSettledSnapshot!] @derivedFrom(field: "payerRegistry")
+    totalExcessTransferred: BigInt!
+    totalExcessTransferredSnapshots: [PayerRegistryTotalExcessTransferredSnapshot!] @derivedFrom(field: "payerRegistry")
+
+    # Event Entities
+    deposits: [PayerRegistryDeposit!] @derivedFrom(field: "payerRegistry")
+    withdrawals: [PayerRegistryWithdrawal!] @derivedFrom(field: "payerRegistry")
+    batchUsageSettlements: [PayerRegistryBatchUsageSettlement!] @derivedFrom(field: "payerRegistry")
+    excessTransfers: [PayerRegistryExcessTransfer!] @derivedFrom(field: "payerRegistry")
+}
