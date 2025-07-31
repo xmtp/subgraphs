@@ -16,13 +16,36 @@
     "inputs": [
       {
         "name": "groupId_",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "type": "bytes16",
+        "internalType": "bytes16"
       },
       {
         "name": "message_",
         "type": "bytes",
         "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "bootstrapMessages",
+    "inputs": [
+      {
+        "name": "groupIds_",
+        "type": "bytes16[]",
+        "internalType": "bytes16[]"
+      },
+      {
+        "name": "messages_",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "sequenceIds_",
+        "type": "uint64[]",
+        "internalType": "uint64[]"
       }
     ],
     "outputs": [],
@@ -68,8 +91,8 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
@@ -88,8 +111,8 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
@@ -114,8 +137,8 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
@@ -153,8 +176,34 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "payloadBootstrapper",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "payloadBootstrapper_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "payloadBootstrapperParameterKey",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "key_",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
@@ -176,6 +225,13 @@
   {
     "type": "function",
     "name": "updatePauseStatus",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updatePayloadBootstrapper",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -212,9 +268,9 @@
     "inputs": [
       {
         "name": "groupId",
-        "type": "bytes32",
+        "type": "bytes16",
         "indexed": true,
-        "internalType": "bytes32"
+        "internalType": "bytes16"
       },
       {
         "name": "message",
@@ -272,6 +328,19 @@
   },
   {
     "type": "event",
+    "name": "PayloadBootstrapperUpdated",
+    "inputs": [
+      {
+        "name": "payloadBootstrapper",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Upgraded",
     "inputs": [
       {
@@ -282,6 +351,16 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "ArrayLengthMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EmptyArray",
+    "inputs": []
   },
   {
     "type": "error",
@@ -354,6 +433,16 @@
   {
     "type": "error",
     "name": "NotInitializing",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotPaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotPayloadBootstrapper",
     "inputs": []
   },
   {

@@ -3,100 +3,140 @@ schema:
     file: ./schema.graphql
 dataSources:
     - kind: ethereum
-      name: PayerRegistry
-      network: base-sepolia
+      name: GroupMessageBroadcaster
+      network: xmtp-ropsten
       source:
-          abi: PayerRegistry
-          address: '0x3Ce54917177666d1a331fbb3F208a3B91218EC00'
-          startBlock: 26552435
+          abi: GroupMessageBroadcaster
+          address: '0xbDF24fD4bBaE0E3CCd42Fb6C07EC6eA347A1Ef87'
+          startBlock: 0
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.9
           language: wasm/assemblyscript
           entities:
-              - PayerRegistryBalanceSnapshot
-              - PayerRegistryPendingWithdrawalSnapshot
-              - PayerRegistryWithdrawableTimestampSnapshot
-              - PayerRegistryDepositedSnapshot
-              - PayerRegistryIncurredDebtSnapshot
-              - PayerRegistryRepaidDebtSnapshot
-              - PayerRegistryWithdrawnSnapshot
-              - PayerRegistryUsageSettledSnapshot
-              - PayerRegistryDeposit
-              - PayerRegistryWithdrawal
-              - PayerRegistryUsageSettlement
-              - Payer
-              - PayerRegistryPausedSnapshot
-              - PayerRegistryTotalDepositsSnapshot
-              - PayerRegistryTotalDebtSnapshot
-              - PayerRegistryWithdrawLockPeriodSnapshot
-              - PayerRegistryMinimumDepositSnapshot
-              - PayerRegistrySettlerSnapshot
-              - PayerRegistryFeeDistributorSnapshot
-              - PayerRegistryTotalWithdrawableSnapshot
-              - PayerRegistryExcessSnapshot
-              - PayerRegistryTotalBalanceSnapshot
-              - PayerRegistryTotalPendingWithdrawalsSnapshot
-              - PayerRegistryTotalDepositedSnapshot
-              - PayerRegistryTotalIncurredDebtSnapshot
-              - PayerRegistryTotalRepaidDebtSnapshot
-              - PayerRegistryTotalWithdrawnSnapshot
-              - PayerRegistryTotalUsageSettledSnapshot
-              - PayerRegistryTotalExcessTransferredSnapshot
-              - PayerRegistryBatchUsageSettlement
-              - PayerRegistryExcessTransfer
-              - PayerRegistry
+              - Account
+              - GroupMessage
+              - GroupMessageBroadcaster
+              - GroupMessageBroadcasterMaxPayloadSizeSnapshot
+              - GroupMessageBroadcasterMinPayloadSizeSnapshot
+              - GroupMessageBroadcasterPausedSnapshot
+              - GroupMessageBroadcasterPayloadBootstrapperSnapshot
+              - GroupMessageBroadcasterTotalMessageBytesSentSnapshot
+              - GroupMessageBroadcasterTotalMessagesSentSnapshot
+              - GroupMessageBroadcasterTotalMessageTransactionFeesSnapshot
+              - GroupMessageBytesSentSnapshot
+              - GroupMessagesSentSnapshot
+              - GroupMessageTransactionFeesSnapshot
+              - TransactionFeesSnapshot
           abis:
-              - name: PayerRegistry
-                file: ./abis/PayerRegistry.abi.json
+              - name: GroupMessageBroadcaster
+                file: ./abis/GroupMessageBroadcaster.abi.json
           eventHandlers:
-              - event: Deposit(indexed address,uint96)
-                handler: handleDeposit
-              - event: ExcessTransferred(uint96)
-                handler: handleExcessTransferred
-              - event: FeeDistributorUpdated(indexed address)
-                handler: handleFeeDistributorUpdated
-              - event: MinimumDepositUpdated(uint96)
-                handler: handleMinimumDepositUpdated
+              - event: MessageSent(indexed bytes16,bytes,indexed uint64)
+                handler: handleMessageSent
+              - event: MinPayloadSizeUpdated(indexed uint256)
+                handler: handleMinPayloadSizeUpdated
+              - event: MaxPayloadSizeUpdated(indexed uint256)
+                handler: handleMaxPayloadSizeUpdated
               - event: PauseStatusUpdated(indexed bool)
                 handler: handlePauseStatusUpdated
-              - event: SettlerUpdated(indexed address)
-                handler: handleSettlerUpdated
-              - event: UsageSettled(indexed address,uint96)
-                handler: handleUsageSettled
-              - event: WithdrawLockPeriodUpdated(uint32)
-                handler: handleWithdrawLockPeriodUpdated
-              - event: WithdrawalCancelled(indexed address)
-                handler: handleWithdrawalCancelled
-              - event: WithdrawalFinalized(indexed address)
-                handler: handleWithdrawalFinalized
-              - event: WithdrawalRequested(indexed address,uint96,uint32)
-                handler: handleWithdrawalRequested
-          file: ./src/payer-registry.ts
+              - event: PayloadBootstrapperUpdated(indexed address)
+                handler: handlePayloadBootstrapperUpdated
+          file: ./src/group-message-broadcaster.ts
     - kind: ethereum
-      name: FeeToken
-      network: base-sepolia
+      name: IdentityUpdateBroadcaster
+      network: xmtp-ropsten
       source:
-          abi: FeeToken
-          address: '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
-          startBlock: 26552435
-          endBlock: 26552435 # Remove this when this is FeeToken/xUSD.
-      context:
-          payerRegistry:
-              type: String
-              data: '0x3Ce54917177666d1a331fbb3F208a3B91218EC00'
+          abi: IdentityUpdateBroadcaster
+          address: '0x559c8c08A251Cc917ccCde13Caf273156d0c8f35'
+          startBlock: 0
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.9
           language: wasm/assemblyscript
           entities:
-              - PayerRegistry
-              - PayerRegistryFeeTokenBalanceSnapshot
-              - PayerRegistryExcessSnapshot
+              - Account
+              - IdentityUpdate
+              - IdentityUpdateBroadcaster
+              - IdentityUpdateBroadcasterMaxPayloadSizeSnapshot
+              - IdentityUpdateBroadcasterMinPayloadSizeSnapshot
+              - IdentityUpdateBroadcasterPausedSnapshot
+              - IdentityUpdateBroadcasterPayloadBootstrapperSnapshot
+              - IdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot
+              - IdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot
+              - IdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot
+              - IdentityUpdateBytesCreatedSnapshot
+              - IdentityUpdateCreatedSnapshot
+              - IdentityUpdateTransactionFeesSnapshot
+              - TransactionFeesSnapshot
           abis:
-              - name: FeeToken
-                file: ./abis/FeeToken.abi.json
+              - name: IdentityUpdateBroadcaster
+                file: ./abis/IdentityUpdateBroadcaster.abi.json
           eventHandlers:
-              - event: Transfer(indexed address,indexed address,uint256)
-                handler: handleTransfer
-          file: ./src/fee-token.ts
+              - event: IdentityUpdateCreated(indexed bytes32,bytes,indexed uint64)
+                handler: handleIdentityUpdateCreated
+              - event: MinPayloadSizeUpdated(indexed uint256)
+                handler: handleMinPayloadSizeUpdated
+              - event: MaxPayloadSizeUpdated(indexed uint256)
+                handler: handleMaxPayloadSizeUpdated
+              - event: PauseStatusUpdated(indexed bool)
+                handler: handlePauseStatusUpdated
+              - event: PayloadBootstrapperUpdated(indexed address)
+                handler: handlePayloadBootstrapperUpdated
+          file: ./src/identity-update-broadcaster.ts
+    - kind: ethereum
+      name: AppChainGateway
+      network: xmtp-ropsten
+      source:
+          abi: AppChainGateway
+          address: '0xB64D5bF62F30512Bd130C0D7c80DB7ac1e6801a3'
+          startBlock: 0
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - Account
+              - AppChainGateway
+              - AppChainGatewayPausedSnapshot
+              - Deposit
+              - DepositsReceivedSnapshot
+              - ParameterReceival
+              - ReceivedParameter
+              - Withdrawal
+              - WithdrawnSnapshot
+          abis:
+              - name: AppChainGateway
+                file: ./abis/AppChainGateway.abi.json
+          eventHandlers:
+              - event: DepositReceived(indexed address,uint256)
+                handler: handleDepositReceived
+              - event: ParametersReceived(indexed uint256,string[])
+                handler: handleParametersReceived
+              - event: PauseStatusUpdated(indexed bool)
+                handler: handlePauseStatusUpdated
+              - event: Withdrawal(indexed address,indexed uint256,indexed address,uint256)
+                handler: handleWithdrawal
+          file: ./src/app-chain-gateway.ts
+    - kind: ethereum
+      name: AppChainParameterRegistry
+      network: xmtp-ropsten
+      source:
+          abi: AppChainParameterRegistry
+          address: '0xB2EA84901BC8c2b18Da7a51db1e1Ca2aAeDf844D'
+          startBlock: 0
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - AppChainParameterRegistry
+              - Parameter
+              - ParameterValueSnapshot
+          abis:
+              - name: AppChainParameterRegistry
+                file: ./abis/AppChainParameterRegistry.abi.json
+          eventHandlers:
+              - event: ParameterSet(indexed string,indexed bytes32)
+                handler: handleParameterSet
+          file: ./src/app-chain-parameter-registry.ts

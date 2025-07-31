@@ -6,49 +6,13 @@
         "name": "parameterRegistry_",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "addIdentityUpdate",
-    "inputs": [
-      {
-        "name": "inboxId_",
-        "type": "bytes32",
-        "internalType": "bytes32"
       },
       {
-        "name": "identityUpdate_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "name": "settlementChainGateway_",
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "bootstrapIdentityUpdates",
-    "inputs": [
-      {
-        "name": "inboxIds_",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "identityUpdates_",
-        "type": "bytes[]",
-        "internalType": "bytes[]"
-      },
-      {
-        "name": "sequenceIds_",
-        "type": "uint64[]",
-        "internalType": "uint64[]"
-      }
-    ],
-    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -73,32 +37,6 @@
   },
   {
     "type": "function",
-    "name": "maxPayloadSize",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "size_",
-        "type": "uint32",
-        "internalType": "uint32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "maxPayloadSizeParameterKey",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "key_",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
     "name": "migrate",
     "inputs": [],
     "outputs": [],
@@ -107,32 +45,6 @@
   {
     "type": "function",
     "name": "migratorParameterKey",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "key_",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "minPayloadSize",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "size_",
-        "type": "uint32",
-        "internalType": "uint32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "minPayloadSizeParameterKey",
     "inputs": [],
     "outputs": [
       {
@@ -184,11 +96,52 @@
   },
   {
     "type": "function",
-    "name": "payloadBootstrapper",
+    "name": "receiveDeposit",
+    "inputs": [
+      {
+        "name": "recipient_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "receiveParameters",
+    "inputs": [
+      {
+        "name": "nonce_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "keys_",
+        "type": "string[]",
+        "internalType": "string[]"
+      },
+      {
+        "name": "values_",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "settlementChainGateway",
     "inputs": [],
     "outputs": [
       {
-        "name": "payloadBootstrapper_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }
@@ -197,30 +150,16 @@
   },
   {
     "type": "function",
-    "name": "payloadBootstrapperParameterKey",
+    "name": "settlementChainGatewayAlias",
     "inputs": [],
     "outputs": [
       {
-        "name": "key_",
-        "type": "string",
-        "internalType": "string"
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "updateMaxPayloadSize",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "updateMinPayloadSize",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -231,32 +170,45 @@
   },
   {
     "type": "function",
-    "name": "updatePayloadBootstrapper",
-    "inputs": [],
+    "name": "withdraw",
+    "inputs": [
+      {
+        "name": "recipient_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "withdrawIntoUnderlying",
+    "inputs": [
+      {
+        "name": "recipient_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
   },
   {
     "type": "event",
-    "name": "IdentityUpdateCreated",
+    "name": "DepositReceived",
     "inputs": [
       {
-        "name": "inboxId",
-        "type": "bytes32",
+        "name": "recipient",
+        "type": "address",
         "indexed": true,
-        "internalType": "bytes32"
+        "internalType": "address"
       },
       {
-        "name": "update",
-        "type": "bytes",
+        "name": "amount",
+        "type": "uint256",
         "indexed": false,
-        "internalType": "bytes"
-      },
-      {
-        "name": "sequenceId",
-        "type": "uint64",
-        "indexed": true,
-        "internalType": "uint64"
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -276,19 +228,6 @@
   },
   {
     "type": "event",
-    "name": "MaxPayloadSizeUpdated",
-    "inputs": [
-      {
-        "name": "size",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Migrated",
     "inputs": [
       {
@@ -302,13 +241,19 @@
   },
   {
     "type": "event",
-    "name": "MinPayloadSizeUpdated",
+    "name": "ParametersReceived",
     "inputs": [
       {
-        "name": "size",
+        "name": "nonce",
         "type": "uint256",
         "indexed": true,
         "internalType": "uint256"
+      },
+      {
+        "name": "keys",
+        "type": "string[]",
+        "indexed": false,
+        "internalType": "string[]"
       }
     ],
     "anonymous": false
@@ -328,19 +273,6 @@
   },
   {
     "type": "event",
-    "name": "PayloadBootstrapperUpdated",
-    "inputs": [
-      {
-        "name": "payloadBootstrapper",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Upgraded",
     "inputs": [
       {
@@ -353,14 +285,35 @@
     "anonymous": false
   },
   {
-    "type": "error",
-    "name": "ArrayLengthMismatch",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "EmptyArray",
-    "inputs": []
+    "type": "event",
+    "name": "Withdrawal",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "messageId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "recipient",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
   },
   {
     "type": "error",
@@ -377,37 +330,6 @@
     "type": "error",
     "name": "InvalidInitialization",
     "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidMaxPayloadSize",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidMinPayloadSize",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidPayloadSize",
-    "inputs": [
-      {
-        "name": "actualSize_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "minSize_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxSize_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
   },
   {
     "type": "error",
@@ -437,12 +359,7 @@
   },
   {
     "type": "error",
-    "name": "NotPaused",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NotPayloadBootstrapper",
+    "name": "NotSettlementChainGateway",
     "inputs": []
   },
   {
@@ -457,12 +374,32 @@
   },
   {
     "type": "error",
+    "name": "TransferFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ZeroMigrator",
     "inputs": []
   },
   {
     "type": "error",
     "name": "ZeroParameterRegistry",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroRecipient",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroSettlementChainGateway",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroWithdrawalAmount",
     "inputs": []
   }
 ]
