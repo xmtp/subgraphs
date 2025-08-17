@@ -346,7 +346,7 @@ type PayerRegistryTotalExcessTransferredSnapshot implements PayerRegistrySnapsho
 
 # ============ PayerRegistry - Event Entities ============ #
 
-type PayerRegistryBatchUsageSettlement @entity(immutable: true) {
+type PayerRegistryBatchUsageSettlement @entity(immutable: false) {
     id: ID! @unique
     payerRegistry: PayerRegistry! @index
     usageSettlements: [PayerRegistryUsageSettlement!] @derivedFrom(field: "batchUsageSettlement")

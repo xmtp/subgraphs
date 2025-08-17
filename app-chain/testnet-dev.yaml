@@ -24,8 +24,8 @@ dataSources:
               - GroupMessageBroadcasterTotalMessageBytesSentSnapshot
               - GroupMessageBroadcasterTotalMessagesSentSnapshot
               - GroupMessageBroadcasterTotalMessageTransactionFeesSnapshot
-              - GroupMessageBytesSentSnapshot
               - GroupMessagesSentSnapshot
+              - GroupMessageBytesSentSnapshot
               - GroupMessageTransactionFeesSnapshot
               - TransactionFeesSnapshot
           abis:
@@ -65,8 +65,8 @@ dataSources:
               - IdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot
               - IdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot
               - IdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot
+              - IdentityUpdatesCreatedSnapshot
               - IdentityUpdateBytesCreatedSnapshot
-              - IdentityUpdateCreatedSnapshot
               - IdentityUpdateTransactionFeesSnapshot
               - TransactionFeesSnapshot
           abis:
@@ -99,6 +99,8 @@ dataSources:
               - Account
               - AppChainGateway
               - AppChainGatewayPausedSnapshot
+              - AppChainGatewayTotalDepositedSnapshot
+              - AppChainGatewayTotalWithdrawnSnapshot
               - Deposit
               - DepositsReceivedSnapshot
               - ParameterReceival

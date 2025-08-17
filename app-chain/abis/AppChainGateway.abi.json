@@ -102,11 +102,6 @@
         "name": "recipient_",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "amount_",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -133,7 +128,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "payable"
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
