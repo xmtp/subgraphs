@@ -121,12 +121,34 @@ dataSources:
                 handler: handleWithdrawal
           file: ./src/app-chain-gateway.ts
     - kind: ethereum
+      name: AppChainParameterRegistry-v0.5.5
+      network: xmtp-ropsten
+      source:
+          abi: AppChainParameterRegistry-v0.5.5
+          address: '0xB2EA84901BC8c2b18Da7a51db1e1Ca2aAeDf844D'
+          startBlock: 0
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - AppChainParameterRegistry
+              - Parameter
+              - ParameterValueSnapshot
+          abis:
+              - name: AppChainParameterRegistry-v0.5.5
+                file: ./abis/AppChainParameterRegistry-v0.5.5.abi.json
+          eventHandlers:
+              - event: ParameterSet(indexed string,indexed bytes32)
+                handler: handleIndexParameterSet
+          file: ./src/app-chain-parameter-registry.ts
+    - kind: ethereum
       name: AppChainParameterRegistry
       network: xmtp-ropsten
       source:
           abi: AppChainParameterRegistry
           address: '0xB2EA84901BC8c2b18Da7a51db1e1Ca2aAeDf844D'
-          startBlock: 0
+          startBlock: 10000 # TODO: Set once migration is done.
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.9
@@ -139,6 +161,6 @@ dataSources:
               - name: AppChainParameterRegistry
                 file: ./abis/AppChainParameterRegistry.abi.json
           eventHandlers:
-              - event: ParameterSet(indexed string,indexed bytes32)
+              - event: ParameterSet(string,bytes32)
                 handler: handleParameterSet
           file: ./src/app-chain-parameter-registry.ts
