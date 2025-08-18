@@ -13,7 +13,7 @@ export function handleParameterSet(event: ParameterSetEvent): void {
     registry.lastUpdate = timestamp;
     registry.save();
 
-    const parameter = getParameter(event.params.key.toString());
+    const parameter = getParameter(event.params.key.toHexString());
 
     parameter.value = event.params.value.toHexString();
     updateParameterValueSnapshot(parameter, timestamp, parameter.value);

@@ -174,7 +174,7 @@ type Account @entity(immutable: false) {
     groupMessages: [GroupMessage!] @derivedFrom(field: "account")
     identityUpdates: [IdentityUpdate!] @derivedFrom(field: "account")
     withdrawals: [Withdrawal!] @derivedFrom(field: "account")
-    receivedDeposits: [Deposit!] @derivedFrom(field: "recipient")
+    receivedDeposits: [ReceivedDeposit!] @derivedFrom(field: "recipient")
 }
 
 # ============ GroupMessageBroadcaster - Snapshot Interfaces ============ #
@@ -433,7 +433,7 @@ type Withdrawal @entity(immutable: true) {
     fee: BigInt!
 }
 
-type Deposit @entity(immutable: true) {
+type ReceivedDeposit @entity(immutable: true) {
     id: ID! @unique
     recipient: Account! @index
     amount: BigInt!

@@ -101,7 +101,7 @@ dataSources:
               - AppChainGatewayPausedSnapshot
               - TotalDepositedSnapshot
               - TotalWithdrawnSnapshot
-              - Deposit
+              - ReceivedDeposit
               - DepositsReceivedSnapshot
               - ParameterReceival
               - ReceivedParameter

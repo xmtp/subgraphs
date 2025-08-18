@@ -7,7 +7,7 @@ import {
     AppChainGatewayPausedSnapshot,
     TotalDepositsReceivedSnapshot,
     TotalWithdrawnSnapshot,
-    Deposit,
+    ReceivedDeposit,
     DepositsReceivedSnapshot,
     ParameterReceival,
     ReceivedParameter,
@@ -48,7 +48,7 @@ export function handleDepositReceived(event: DepositReceivedEvent): void {
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const deposit = new Deposit(`Deposit-${transactionHash}`);
+    const deposit = new ReceivedDeposit(`ReceivedDeposit-${transactionHash}`);
 
     deposit.recipient = account.id;
     deposit.amount = amount;
@@ -72,7 +72,7 @@ export function handleParametersReceived(event: ParametersReceivedEvent): void {
 
     for (let i = 0; i < event.params.keys.length; i++) {
         const key = event.params.keys[i];
-        const parameter = new ReceivedParameter(`ReceivedParameter-${transactionHash}-${key}`);
+        const parameter = new ReceivedParameter(`ReceivedParameter-${transactionHash}-${i}`);
 
         parameter.key = key;
         parameter.event = parameterReceival.id;
@@ -83,6 +83,7 @@ export function handleParametersReceived(event: ParametersReceivedEvent): void {
     parameterReceival.timestamp = timestamp;
     parameterReceival.transactionHash = event.transaction.hash.toHexString();
     parameterReceival.logIndex = event.logIndex;
+
     parameterReceival.save();
 }
 
