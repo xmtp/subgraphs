@@ -5,16 +5,16 @@ import {
     Account,
     GroupMessage,
     GroupMessageBroadcaster,
-    GroupMessageBroadcasterMaxPayloadSizeSnapshot,
-    GroupMessageBroadcasterMinPayloadSizeSnapshot,
+    MaxGroupMessagePayloadSizeSnapshot,
+    MinGroupMessagePayloadSizeSnapshot,
     GroupMessageBroadcasterPausedSnapshot,
-    GroupMessageBroadcasterPayloadBootstrapperSnapshot,
-    GroupMessageBroadcasterTotalMessageBytesSentSnapshot,
-    GroupMessageBroadcasterTotalMessagesSentSnapshot,
-    GroupMessageBroadcasterTotalMessageTransactionFeesSnapshot,
+    GroupMessagePayloadBootstrapperSnapshot,
+    TotalGroupMessageBytesSentSnapshot,
+    TotalGroupMessagesSentSnapshot,
+    TotalGroupMessageFeesSnapshot,
     GroupMessageBytesSentSnapshot,
     GroupMessagesSentSnapshot,
-    GroupMessageTransactionFeesSnapshot,
+    GroupMessageFeesSnapshot,
 } from '../generated/schema';
 
 import {
@@ -25,7 +25,7 @@ import {
     PayloadBootstrapperUpdated as PayloadBootstrapperUpdatedEvent,
 } from '../generated/GroupMessageBroadcaster/GroupMessageBroadcaster';
 
-import { ZERO_ADDRESS, getAccount, updateAccountTransactionFeesSnapshot } from './common';
+import { ZERO_ADDRESS, getAccount, updateAccountFeesSnapshot } from './common';
 
 /* ============ Handlers ============ */
 
@@ -45,34 +45,28 @@ export function handleMessageSent(event: MessageSentEvent): void {
     account.groupMessageBytesSent = account.groupMessageBytesSent.plus(BigInt.fromI32(messageLength));
     updateAccountGroupMessageBytesSentSnapshot(account, timestamp, account.groupMessageBytesSent);
 
-    account.groupMessageTransactionFees = account.groupMessageTransactionFees.plus(transactionFee);
-    updateAccountGroupMessageTransactionFeesSnapshot(account, timestamp, account.groupMessageTransactionFees);
+    account.groupMessageFees = account.groupMessageFees.plus(transactionFee);
+    updateAccountGroupMessageFeesSnapshot(account, timestamp, account.groupMessageFees);
 
-    account.transactionFees = account.transactionFees.plus(transactionFee);
-    updateAccountTransactionFeesSnapshot(account, timestamp, account.transactionFees);
+    account.fees = account.fees.plus(transactionFee);
+    updateAccountFeesSnapshot(account, timestamp, account.fees);
 
     account.lastUpdate = timestamp;
     account.save();
 
-    broadcaster.totalMessagesSent = broadcaster.totalMessagesSent.plus(BigInt.fromI32(1));
+    broadcaster.totalGroupMessagesSent = broadcaster.totalGroupMessagesSent.plus(BigInt.fromI32(1));
+    updateTotalGroupMessagesSentSnapshot(timestamp, broadcaster.totalGroupMessagesSent);
 
-    updateGroupMessageBroadcasterTotalMessagesSentSnapshot(timestamp, broadcaster.totalMessagesSent);
+    broadcaster.totalGroupMessageBytesSent = broadcaster.totalGroupMessageBytesSent.plus(BigInt.fromI32(messageLength));
+    updateTotalGroupMessageBytesSentSnapshot(timestamp, broadcaster.totalGroupMessageBytesSent);
 
-    broadcaster.totalMessageBytesSent = broadcaster.totalMessageBytesSent.plus(BigInt.fromI32(messageLength));
-
-    updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(timestamp, broadcaster.totalMessageBytesSent);
-
-    broadcaster.totalMessageTransactionFees = broadcaster.totalMessageTransactionFees.plus(transactionFee);
-
-    updateGroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(
-        timestamp,
-        broadcaster.totalMessageTransactionFees
-    );
+    broadcaster.totalGroupMessageFees = broadcaster.totalGroupMessageFees.plus(transactionFee);
+    updateTotalGroupMessageFeesSnapshot(timestamp, broadcaster.totalGroupMessageFees);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
 
-    const groupMessage = new GroupMessage(`groupMessage-${transactionHash}`);
+    const groupMessage = new GroupMessage(`GroupMessage-${transactionHash}`);
 
     groupMessage.account = account.id;
     groupMessage.groupId = event.params.groupId.toHexString();
@@ -81,7 +75,7 @@ export function handleMessageSent(event: MessageSentEvent): void {
     groupMessage.timestamp = timestamp;
     groupMessage.transactionHash = transactionHash;
     groupMessage.logIndex = event.logIndex;
-    groupMessage.transactionFee = transactionFee;
+    groupMessage.fee = transactionFee;
 
     groupMessage.save();
 }
@@ -91,7 +85,7 @@ export function handleMinPayloadSizeUpdated(event: MinPayloadSizeUpdatedEvent): 
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.minPayloadSize = event.params.size;
-    updateGroupMessageBroadcasterMinPayloadSizeSnapshot(timestamp, broadcaster.minPayloadSize);
+    updateMinGroupMessagePayloadSizeSnapshot(timestamp, broadcaster.minPayloadSize);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -102,7 +96,7 @@ export function handleMaxPayloadSizeUpdated(event: MaxPayloadSizeUpdatedEvent): 
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.maxPayloadSize = event.params.size;
-    updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(timestamp, broadcaster.maxPayloadSize);
+    updateMaxGroupMessagePayloadSizeSnapshot(timestamp, broadcaster.maxPayloadSize);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -124,7 +118,7 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.payloadBootstrapper = event.params.payloadBootstrapper.toHexString();
-    updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(timestamp, broadcaster.payloadBootstrapper);
+    updateGroupMessagePayloadBootstrapperSnapshot(timestamp, broadcaster.payloadBootstrapper);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -133,7 +127,7 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
 /* ============ Entity Helpers ============ */
 
 export function getGroupMessageBroadcaster(groupMessageBroadcasterAddress: Address): GroupMessageBroadcaster {
-    const id = `groupMessageBroadcaster-${groupMessageBroadcasterAddress.toHexString()}`;
+    const id = `GroupMessageBroadcaster-${groupMessageBroadcasterAddress.toHexString()}`;
 
     let broadcaster = GroupMessageBroadcaster.load(id);
 
@@ -146,22 +140,22 @@ export function getGroupMessageBroadcaster(groupMessageBroadcasterAddress: Addre
     broadcaster.maxPayloadSize = BigInt.fromI32(0);
     broadcaster.paused = false;
     broadcaster.payloadBootstrapper = ZERO_ADDRESS.toHexString();
-    broadcaster.totalMessagesSent = BigInt.fromI32(0);
-    broadcaster.totalMessageBytesSent = BigInt.fromI32(0);
-    broadcaster.totalMessageTransactionFees = BigInt.fromI32(0);
+    broadcaster.totalGroupMessagesSent = BigInt.fromI32(0);
+    broadcaster.totalGroupMessageBytesSent = BigInt.fromI32(0);
+    broadcaster.totalGroupMessageFees = BigInt.fromI32(0);
 
     return broadcaster;
 }
 
 /* ============ Group Message Broadcaster Snapshot Helpers ============ */
 
-function updateGroupMessageBroadcasterMinPayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `groupMessageBroadcasterMinPayloadSize-${timestamp.toString()}`;
+function updateMinGroupMessagePayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `MinGroupMessagePayloadSizeSnapshot-${timestamp.toString()}`;
 
-    let snapshot = GroupMessageBroadcasterMinPayloadSizeSnapshot.load(id);
+    let snapshot = MinGroupMessagePayloadSizeSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new GroupMessageBroadcasterMinPayloadSizeSnapshot(id);
+        snapshot = new MinGroupMessagePayloadSizeSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -171,13 +165,13 @@ function updateGroupMessageBroadcasterMinPayloadSizeSnapshot(timestamp: Timestam
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `groupMessageBroadcasterMaxPayloadSize-${timestamp.toString()}`;
+function updateMaxGroupMessagePayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `MaxGroupMessagePayloadSizeSnapshot-${timestamp.toString()}`;
 
-    let snapshot = GroupMessageBroadcasterMaxPayloadSizeSnapshot.load(id);
+    let snapshot = MaxGroupMessagePayloadSizeSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new GroupMessageBroadcasterMaxPayloadSizeSnapshot(id);
+        snapshot = new MaxGroupMessagePayloadSizeSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -188,7 +182,7 @@ function updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(timestamp: Timestam
 }
 
 function updateGroupMessageBroadcasterPausedSnapshot(timestamp: Timestamp, value: boolean): void {
-    const id = `groupMessageBroadcasterPaused-${timestamp.toString()}`;
+    const id = `GroupMessageBroadcasterPausedSnapshot-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterPausedSnapshot.load(id);
 
@@ -203,13 +197,13 @@ function updateGroupMessageBroadcasterPausedSnapshot(timestamp: Timestamp, value
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(timestamp: Timestamp, value: string): void {
-    const id = `groupMessageBroadcasterPayloadBootstrapper-${timestamp.toString()}`;
+function updateGroupMessagePayloadBootstrapperSnapshot(timestamp: Timestamp, value: string): void {
+    const id = `GroupMessagePayloadBootstrapperSnapshot-${timestamp.toString()}`;
 
-    let snapshot = GroupMessageBroadcasterPayloadBootstrapperSnapshot.load(id);
+    let snapshot = GroupMessagePayloadBootstrapperSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new GroupMessageBroadcasterPayloadBootstrapperSnapshot(id);
+        snapshot = new GroupMessagePayloadBootstrapperSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -219,13 +213,13 @@ function updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(timestamp: Tim
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterTotalMessagesSentSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `groupMessageBroadcasterTotalMessagesSent-${timestamp.toString()}`;
+function updateTotalGroupMessagesSentSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `TotalGroupMessagesSentSnapshot-${timestamp.toString()}`;
 
-    let snapshot = GroupMessageBroadcasterTotalMessagesSentSnapshot.load(id);
+    let snapshot = TotalGroupMessagesSentSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new GroupMessageBroadcasterTotalMessagesSentSnapshot(id);
+        snapshot = new TotalGroupMessagesSentSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -235,13 +229,13 @@ function updateGroupMessageBroadcasterTotalMessagesSentSnapshot(timestamp: Times
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `groupMessageBroadcasterTotalMessageBytesSent-${timestamp.toString()}`;
+function updateTotalGroupMessageBytesSentSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `TotalGroupMessageBytesSentSnapshot-${timestamp.toString()}`;
 
-    let snapshot = GroupMessageBroadcasterTotalMessageBytesSentSnapshot.load(id);
+    let snapshot = TotalGroupMessageBytesSentSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new GroupMessageBroadcasterTotalMessageBytesSentSnapshot(id);
+        snapshot = new TotalGroupMessageBytesSentSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -251,13 +245,13 @@ function updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(timestamp: T
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `groupMessageBroadcasterTotalMessageTransactionFees-${timestamp.toString()}`;
+function updateTotalGroupMessageFeesSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `TotalGroupMessageFeesSnapshot-${timestamp.toString()}`;
 
-    let snapshot = GroupMessageBroadcasterTotalMessageTransactionFeesSnapshot.load(id);
+    let snapshot = TotalGroupMessageFeesSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new GroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(id);
+        snapshot = new TotalGroupMessageFeesSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -270,7 +264,7 @@ function updateGroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(timest
 /* ============ Account Snapshot Helpers ============ */
 
 function updateAccountGroupMessagesSentSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
-    const id = `accountGroupMessagesSent-${account.address}-${timestamp.toString()}`;
+    const id = `GroupMessagesSentSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = GroupMessagesSentSnapshot.load(id);
 
@@ -287,7 +281,7 @@ function updateAccountGroupMessagesSentSnapshot(account: Account, timestamp: Tim
 }
 
 function updateAccountGroupMessageBytesSentSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
-    const id = `accountGroupMessageBytesSent-${account.address}-${timestamp.toString()}`;
+    const id = `GroupMessageBytesSentSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBytesSentSnapshot.load(id);
 
@@ -303,13 +297,13 @@ function updateAccountGroupMessageBytesSentSnapshot(account: Account, timestamp:
     snapshot.save();
 }
 
-function updateAccountGroupMessageTransactionFeesSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
-    const id = `accountGroupMessageTransactionFees-${account.address}-${timestamp.toString()}`;
+function updateAccountGroupMessageFeesSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+    const id = `GroupMessageFeesSnapshot-${account.address}-${timestamp.toString()}`;
 
-    let snapshot = GroupMessageTransactionFeesSnapshot.load(id);
+    let snapshot = GroupMessageFeesSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new GroupMessageTransactionFeesSnapshot(id);
+        snapshot = new GroupMessageFeesSnapshot(id);
 
         snapshot.account = account.id;
         snapshot.timestamp = timestamp;

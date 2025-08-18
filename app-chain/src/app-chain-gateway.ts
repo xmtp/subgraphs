@@ -5,13 +5,13 @@ import {
     Account,
     AppChainGateway,
     AppChainGatewayPausedSnapshot,
-    AppChainGatewayTotalDepositsReceivedSnapshot,
-    AppChainGatewayTotalWithdrawnSnapshot,
-    AppChainGatewayDeposit,
+    TotalDepositsReceivedSnapshot,
+    TotalWithdrawnSnapshot,
+    Deposit,
     DepositsReceivedSnapshot,
-    AppChainGatewayParameterReceival,
-    AppChainGatewayReceivedParameter,
-    AppChainGatewayWithdrawal,
+    ParameterReceival,
+    ReceivedParameter,
+    Withdrawal,
     WithdrawnSnapshot,
 } from '../generated/schema';
 
@@ -43,19 +43,19 @@ export function handleDepositReceived(event: DepositReceivedEvent): void {
     account.save();
 
     gateway.totalDepositsReceived = gateway.totalDepositsReceived.plus(amount);
-    updateAppChainGatewayTotalDepositsReceivedSnapshot(timestamp, gateway.totalDepositsReceived);
+    updateTotalDepositsReceivedSnapshot(timestamp, gateway.totalDepositsReceived);
 
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const deposit = new AppChainGatewayDeposit(`appChainGatewayDeposit-${transactionHash}`);
+    const deposit = new Deposit(`Deposit-${transactionHash}`);
 
     deposit.recipient = account.id;
     deposit.amount = amount;
     deposit.timestamp = timestamp;
     deposit.transactionHash = transactionHash;
     deposit.logIndex = event.logIndex;
-    deposit.transactionFee = transactionFee;
+    deposit.fee = transactionFee;
 
     deposit.save();
 }
@@ -68,15 +68,11 @@ export function handleParametersReceived(event: ParametersReceivedEvent): void {
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const parameterReceival = new AppChainGatewayParameterReceival(
-        `appChainGatewayParameterReceival-${transactionHash}`
-    );
+    const parameterReceival = new ParameterReceival(`ParameterReceival-${transactionHash}`);
 
     for (let i = 0; i < event.params.keys.length; i++) {
         const key = event.params.keys[i];
-        const parameter = new AppChainGatewayReceivedParameter(
-            `appChainGatewayReceivedParameter-${transactionHash}-${key}`
-        );
+        const parameter = new ReceivedParameter(`ReceivedParameter-${transactionHash}-${key}`);
 
         parameter.key = key;
         parameter.event = parameterReceival.id;
@@ -118,12 +114,12 @@ export function handleWithdrawal(event: WithdrawalEvent): void {
     account.save();
 
     gateway.totalWithdrawn = gateway.totalWithdrawn.plus(amount);
-    updateAppChainGatewayTotalWithdrawnSnapshot(timestamp, gateway.totalWithdrawn);
+    updateTotalWithdrawnSnapshot(timestamp, gateway.totalWithdrawn);
 
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const withdrawal = new AppChainGatewayWithdrawal(`appChainGatewayWithdrawal-${transactionHash}`);
+    const withdrawal = new Withdrawal(`Withdrawal-${transactionHash}`);
 
     withdrawal.account = account.id;
     withdrawal.recipient = event.params.recipient.toHexString();
@@ -131,7 +127,7 @@ export function handleWithdrawal(event: WithdrawalEvent): void {
     withdrawal.timestamp = timestamp;
     withdrawal.transactionHash = transactionHash;
     withdrawal.logIndex = event.logIndex;
-    withdrawal.transactionFee = transactionFee;
+    withdrawal.fee = transactionFee;
 
     withdrawal.save();
 }
@@ -139,7 +135,7 @@ export function handleWithdrawal(event: WithdrawalEvent): void {
 /* ============ Entity Helpers ============ */
 
 function getAppChainGateway(address: Address): AppChainGateway {
-    const id = `appChainGateway-${address.toHexString()}`;
+    const id = `AppChainGateway-${address.toHexString()}`;
 
     let gateway = AppChainGateway.load(id);
 
@@ -157,13 +153,13 @@ function getAppChainGateway(address: Address): AppChainGateway {
 
 /* ============ AppChainGateway Snapshot Helpers ============ */
 
-function updateAppChainGatewayTotalDepositsReceivedSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `appChainGatewayTotalDepositsReceived-${timestamp.toString()}`;
+function updateTotalDepositsReceivedSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `TotalDepositsReceivedSnapshot-${timestamp.toString()}`;
 
-    let snapshot = AppChainGatewayTotalDepositsReceivedSnapshot.load(id);
+    let snapshot = TotalDepositsReceivedSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new AppChainGatewayTotalDepositsReceivedSnapshot(id);
+        snapshot = new TotalDepositsReceivedSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -174,7 +170,7 @@ function updateAppChainGatewayTotalDepositsReceivedSnapshot(timestamp: Timestamp
 }
 
 function updateAppChainGatewayPausedSnapshot(timestamp: Timestamp, value: boolean): void {
-    const id = `appChainGatewayPaused-${timestamp.toString()}`;
+    const id = `AppChainGatewayPausedSnapshot-${timestamp.toString()}`;
 
     let snapshot = AppChainGatewayPausedSnapshot.load(id);
 
@@ -189,13 +185,13 @@ function updateAppChainGatewayPausedSnapshot(timestamp: Timestamp, value: boolea
     snapshot.save();
 }
 
-function updateAppChainGatewayTotalWithdrawnSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `appChainGatewayTotalWithdrawn-${timestamp.toString()}`;
+function updateTotalWithdrawnSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `TotalWithdrawnSnapshot-${timestamp.toString()}`;
 
-    let snapshot = AppChainGatewayTotalWithdrawnSnapshot.load(id);
+    let snapshot = TotalWithdrawnSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new AppChainGatewayTotalWithdrawnSnapshot(id);
+        snapshot = new TotalWithdrawnSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -208,7 +204,7 @@ function updateAppChainGatewayTotalWithdrawnSnapshot(timestamp: Timestamp, value
 /* ============ Account Snapshot Helpers ============ */
 
 function updateAccountDepositsReceivedSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
-    const id = `accountDepositsReceived-${timestamp.toString()}`;
+    const id = `DepositsReceivedSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = DepositsReceivedSnapshot.load(id);
 
@@ -225,7 +221,7 @@ function updateAccountDepositsReceivedSnapshot(account: Account, timestamp: Time
 }
 
 function updateAccountWithdrawnSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
-    const id = `accountWithdrawn-${timestamp.toString()}`;
+    const id = `WithdrawnSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = WithdrawnSnapshot.load(id);
 

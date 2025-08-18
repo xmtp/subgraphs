@@ -17,17 +17,17 @@ dataSources:
               - Account
               - GroupMessage
               - GroupMessageBroadcaster
-              - GroupMessageBroadcasterMaxPayloadSizeSnapshot
-              - GroupMessageBroadcasterMinPayloadSizeSnapshot
+              - MaxGroupMessagePayloadSizeSnapshot
+              - MinGroupMessagePayloadSizeSnapshot
               - GroupMessageBroadcasterPausedSnapshot
-              - GroupMessageBroadcasterPayloadBootstrapperSnapshot
-              - GroupMessageBroadcasterTotalMessageBytesSentSnapshot
-              - GroupMessageBroadcasterTotalMessagesSentSnapshot
-              - GroupMessageBroadcasterTotalMessageTransactionFeesSnapshot
+              - GroupMessagePayloadBootstrapperSnapshot
+              - TotalGroupMessageBytesSentSnapshot
+              - TotalGroupMessagesSentSnapshot
+              - TotalGroupMessageFeesSnapshot
               - GroupMessagesSentSnapshot
               - GroupMessageBytesSentSnapshot
-              - GroupMessageTransactionFeesSnapshot
-              - TransactionFeesSnapshot
+              - GroupMessageFeesSnapshot
+              - FeesSnapshot
           abis:
               - name: GroupMessageBroadcaster
                 file: ./abis/GroupMessageBroadcaster.abi.json
@@ -58,17 +58,17 @@ dataSources:
               - Account
               - IdentityUpdate
               - IdentityUpdateBroadcaster
-              - IdentityUpdateBroadcasterMaxPayloadSizeSnapshot
-              - IdentityUpdateBroadcasterMinPayloadSizeSnapshot
+              - MaxIdentityUpdatePayloadSizeSnapshot
+              - MinIdentityUpdatePayloadSizeSnapshot
               - IdentityUpdateBroadcasterPausedSnapshot
-              - IdentityUpdateBroadcasterPayloadBootstrapperSnapshot
-              - IdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot
-              - IdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot
-              - IdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot
+              - IdentityUpdatePayloadBootstrapperSnapshot
+              - TotalIdentityUpdateBytesCreatedSnapshot
+              - TotalIdentityUpdatesCreatedSnapshot
+              - TotalIdentityUpdateFeesSnapshot
               - IdentityUpdatesCreatedSnapshot
               - IdentityUpdateBytesCreatedSnapshot
-              - IdentityUpdateTransactionFeesSnapshot
-              - TransactionFeesSnapshot
+              - IdentityUpdateFeesSnapshot
+              - FeesSnapshot
           abis:
               - name: IdentityUpdateBroadcaster
                 file: ./abis/IdentityUpdateBroadcaster.abi.json
@@ -99,13 +99,13 @@ dataSources:
               - Account
               - AppChainGateway
               - AppChainGatewayPausedSnapshot
-              - AppChainGatewayTotalDepositedSnapshot
-              - AppChainGatewayTotalWithdrawnSnapshot
-              - AppChainGatewayDeposit
+              - TotalDepositedSnapshot
+              - TotalWithdrawnSnapshot
+              - Deposit
               - DepositsReceivedSnapshot
-              - AppChainGatewayParameterReceival
-              - AppChainGatewayReceivedParameter
-              - AppChainGatewayWithdrawal
+              - ParameterReceival
+              - ReceivedParameter
+              - Withdrawal
               - WithdrawnSnapshot
           abis:
               - name: AppChainGateway
@@ -133,8 +133,8 @@ dataSources:
           language: wasm/assemblyscript
           entities:
               - AppChainParameterRegistry
-              - AppChainParameterRegistryParameter
-              - AppChainParameterRegistryParameterValueSnapshot
+              - Parameter
+              - ParameterValueSnapshot
           abis:
               - name: AppChainParameterRegistry
                 file: ./abis/AppChainParameterRegistry.abi.json

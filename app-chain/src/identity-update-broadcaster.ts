@@ -5,16 +5,16 @@ import {
     Account,
     IdentityUpdate,
     IdentityUpdateBroadcaster,
-    IdentityUpdateBroadcasterMaxPayloadSizeSnapshot,
-    IdentityUpdateBroadcasterMinPayloadSizeSnapshot,
+    MaxIdentityUpdatePayloadSizeSnapshot,
+    MinIdentityUpdatePayloadSizeSnapshot,
     IdentityUpdateBroadcasterPausedSnapshot,
-    IdentityUpdateBroadcasterPayloadBootstrapperSnapshot,
-    IdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot,
-    IdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot,
-    IdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot,
+    IdentityUpdatePayloadBootstrapperSnapshot,
+    TotalIdentityUpdateBytesCreatedSnapshot,
+    TotalIdentityUpdatesCreatedSnapshot,
+    TotalIdentityUpdateFeesSnapshot,
     IdentityUpdateBytesCreatedSnapshot,
     IdentityUpdatesCreatedSnapshot,
-    IdentityUpdateTransactionFeesSnapshot,
+    IdentityUpdateFeesSnapshot,
 } from '../generated/schema';
 
 import {
@@ -25,7 +25,7 @@ import {
     PayloadBootstrapperUpdated as PayloadBootstrapperUpdatedEvent,
 } from '../generated/IdentityUpdateBroadcaster/IdentityUpdateBroadcaster';
 
-import { ZERO_ADDRESS, getAccount, updateAccountTransactionFeesSnapshot } from './common';
+import { ZERO_ADDRESS, getAccount, updateAccountFeesSnapshot } from './common';
 
 /* ============ Handlers ============ */
 
@@ -45,43 +45,31 @@ export function handleIdentityUpdateCreated(event: IdentityUpdateCreatedEvent): 
     account.identityUpdateBytesCreated = account.identityUpdateBytesCreated.plus(BigInt.fromI32(updateLength));
     updateAccountIdentityUpdateBytesCreatedSnapshot(account, timestamp, account.identityUpdateBytesCreated);
 
-    account.identityUpdateTransactionFees = account.identityUpdateTransactionFees.plus(transactionFee);
-    updateAccountIdentityUpdateTransactionFeesSnapshot(account, timestamp, account.identityUpdateTransactionFees);
+    account.identityUpdateFees = account.identityUpdateFees.plus(transactionFee);
+    updateAccountIdentityUpdateFeesSnapshot(account, timestamp, account.identityUpdateFees);
 
-    account.identityUpdateTransactionFees = account.identityUpdateTransactionFees.plus(transactionFee);
-    updateAccountTransactionFeesSnapshot(account, timestamp, account.identityUpdateTransactionFees);
+    account.fees = account.fees.plus(transactionFee);
+    updateAccountFeesSnapshot(account, timestamp, account.fees);
 
     account.lastUpdate = timestamp;
     account.save();
 
     broadcaster.totalIdentityUpdatesCreated = broadcaster.totalIdentityUpdatesCreated.plus(BigInt.fromI32(1));
-
-    updateIdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(
-        timestamp,
-        broadcaster.totalIdentityUpdatesCreated
-    );
+    updateTotalIdentityUpdatesCreatedSnapshot(timestamp, broadcaster.totalIdentityUpdatesCreated);
 
     broadcaster.totalIdentityUpdateBytesCreated = broadcaster.totalIdentityUpdateBytesCreated.plus(
         BigInt.fromI32(updateLength)
     );
 
-    updateIdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(
-        timestamp,
-        broadcaster.totalIdentityUpdateBytesCreated
-    );
+    updateTotalIdentityUpdateBytesCreatedSnapshot(timestamp, broadcaster.totalIdentityUpdateBytesCreated);
 
-    broadcaster.totalIdentityUpdateTransactionFees =
-        broadcaster.totalIdentityUpdateTransactionFees.plus(transactionFee);
-
-    updateIdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot(
-        timestamp,
-        broadcaster.totalIdentityUpdateTransactionFees
-    );
+    broadcaster.totalIdentityUpdateFees = broadcaster.totalIdentityUpdateFees.plus(transactionFee);
+    updateTotalIdentityUpdateFeesSnapshot(timestamp, broadcaster.totalIdentityUpdateFees);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
 
-    const identityUpdate = new IdentityUpdate(`identityUpdate-${transactionHash}`);
+    const identityUpdate = new IdentityUpdate(`IdentityUpdate-${transactionHash}`);
 
     identityUpdate.account = account.id;
     identityUpdate.inboxId = event.params.inboxId.toHexString();
@@ -90,7 +78,7 @@ export function handleIdentityUpdateCreated(event: IdentityUpdateCreatedEvent): 
     identityUpdate.timestamp = timestamp;
     identityUpdate.transactionHash = transactionHash;
     identityUpdate.logIndex = event.logIndex;
-    identityUpdate.transactionFee = transactionFee;
+    identityUpdate.fee = transactionFee;
 
     identityUpdate.save();
 }
@@ -100,7 +88,7 @@ export function handleMinPayloadSizeUpdated(event: MinPayloadSizeUpdatedEvent): 
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.minPayloadSize = event.params.size;
-    updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(timestamp, broadcaster.minPayloadSize);
+    updateMinIdentityUpdatePayloadSizeSnapshot(timestamp, broadcaster.minPayloadSize);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -111,7 +99,7 @@ export function handleMaxPayloadSizeUpdated(event: MaxPayloadSizeUpdatedEvent): 
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.maxPayloadSize = event.params.size;
-    updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(timestamp, broadcaster.maxPayloadSize);
+    updateMaxIdentityUpdatePayloadSizeSnapshot(timestamp, broadcaster.maxPayloadSize);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -133,7 +121,7 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.payloadBootstrapper = event.params.payloadBootstrapper.toHexString();
-    updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(timestamp, broadcaster.payloadBootstrapper);
+    updateIdentityUpdatePayloadBootstrapperSnapshot(timestamp, broadcaster.payloadBootstrapper);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -142,7 +130,7 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
 /* ============ Entity Helpers ============ */
 
 export function getIdentityUpdateBroadcaster(identityUpdateBroadcasterAddress: Address): IdentityUpdateBroadcaster {
-    const id = `identityUpdateBroadcaster-${identityUpdateBroadcasterAddress.toHexString()}`;
+    const id = `IdentityUpdateBroadcaster-${identityUpdateBroadcasterAddress.toHexString()}`;
 
     let broadcaster = IdentityUpdateBroadcaster.load(id);
 
@@ -157,20 +145,20 @@ export function getIdentityUpdateBroadcaster(identityUpdateBroadcasterAddress: A
     broadcaster.payloadBootstrapper = ZERO_ADDRESS.toHexString();
     broadcaster.totalIdentityUpdatesCreated = BigInt.fromI32(0);
     broadcaster.totalIdentityUpdateBytesCreated = BigInt.fromI32(0);
-    broadcaster.totalIdentityUpdateTransactionFees = BigInt.fromI32(0);
+    broadcaster.totalIdentityUpdateFees = BigInt.fromI32(0);
 
     return broadcaster;
 }
 
 /* ============ Identity Update Broadcaster Snapshot Helpers ============ */
 
-function updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `identityUpdateBroadcasterMinPayloadSize-${timestamp.toString()}`;
+function updateMinIdentityUpdatePayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `MinIdentityUpdatePayloadSizeSnapshot-${timestamp.toString()}`;
 
-    let snapshot = IdentityUpdateBroadcasterMinPayloadSizeSnapshot.load(id);
+    let snapshot = MinIdentityUpdatePayloadSizeSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new IdentityUpdateBroadcasterMinPayloadSizeSnapshot(id);
+        snapshot = new MinIdentityUpdatePayloadSizeSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -180,13 +168,13 @@ function updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(timestamp: Timest
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `identityUpdateBroadcasterMaxPayloadSize-${timestamp.toString()}`;
+function updateMaxIdentityUpdatePayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `MaxIdentityUpdatePayloadSizeSnapshot-${timestamp.toString()}`;
 
-    let snapshot = IdentityUpdateBroadcasterMaxPayloadSizeSnapshot.load(id);
+    let snapshot = MaxIdentityUpdatePayloadSizeSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new IdentityUpdateBroadcasterMaxPayloadSizeSnapshot(id);
+        snapshot = new MaxIdentityUpdatePayloadSizeSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -197,7 +185,7 @@ function updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(timestamp: Timest
 }
 
 function updateIdentityUpdateBroadcasterPausedSnapshot(timestamp: Timestamp, value: boolean): void {
-    const id = `identityUpdateBroadcasterPaused-${timestamp.toString()}`;
+    const id = `IdentityUpdateBroadcasterPausedSnapshot-${timestamp.toString()}`;
 
     let snapshot = IdentityUpdateBroadcasterPausedSnapshot.load(id);
 
@@ -212,13 +200,13 @@ function updateIdentityUpdateBroadcasterPausedSnapshot(timestamp: Timestamp, val
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(timestamp: Timestamp, value: string): void {
-    const id = `identityUpdateBroadcasterPayloadBootstrapper-${timestamp.toString()}`;
+function updateIdentityUpdatePayloadBootstrapperSnapshot(timestamp: Timestamp, value: string): void {
+    const id = `IdentityUpdatePayloadBootstrapperSnapshot-${timestamp.toString()}`;
 
-    let snapshot = IdentityUpdateBroadcasterPayloadBootstrapperSnapshot.load(id);
+    let snapshot = IdentityUpdatePayloadBootstrapperSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new IdentityUpdateBroadcasterPayloadBootstrapperSnapshot(id);
+        snapshot = new IdentityUpdatePayloadBootstrapperSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -228,13 +216,13 @@ function updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(timestamp: T
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(timestamp: Timestamp, value: BigInt): void {
-    const id = `identityUpdateBroadcasterTotalIdentityUpdatesCreated-${timestamp.toString()}`;
+function updateTotalIdentityUpdatesCreatedSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `TotalIdentityUpdatesCreatedSnapshot-${timestamp.toString()}`;
 
-    let snapshot = IdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot.load(id);
+    let snapshot = TotalIdentityUpdatesCreatedSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new IdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(id);
+        snapshot = new TotalIdentityUpdatesCreatedSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -244,16 +232,13 @@ function updateIdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(time
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(
-    timestamp: Timestamp,
-    value: BigInt
-): void {
-    const id = `identityUpdateBroadcasterTotalIdentityUpdateBytesCreated-${timestamp.toString()}`;
+function updateTotalIdentityUpdateBytesCreatedSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `TotalIdentityUpdateBytesCreatedSnapshot-${timestamp.toString()}`;
 
-    let snapshot = IdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot.load(id);
+    let snapshot = TotalIdentityUpdateBytesCreatedSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new IdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(id);
+        snapshot = new TotalIdentityUpdateBytesCreatedSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -263,16 +248,13 @@ function updateIdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot(
-    timestamp: Timestamp,
-    value: BigInt
-): void {
-    const id = `identityUpdateBroadcasterTotalIdentityUpdateTransactionFees-${timestamp.toString()}`;
+function updateTotalIdentityUpdateFeesSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `TotalIdentityUpdateFeesSnapshot-${timestamp.toString()}`;
 
-    let snapshot = IdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot.load(id);
+    let snapshot = TotalIdentityUpdateFeesSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new IdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot(id);
+        snapshot = new TotalIdentityUpdateFeesSnapshot(id);
 
         snapshot.timestamp = timestamp;
     }
@@ -285,7 +267,7 @@ function updateIdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapsh
 /* ============ Account Snapshot Helpers ============ */
 
 function updateAccountIdentityUpdatesCreatedSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
-    const id = `accountIdentityUpdatesCreated-${account.address}-${timestamp.toString()}`;
+    const id = `IdentityUpdatesCreatedSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = IdentityUpdatesCreatedSnapshot.load(id);
 
@@ -302,7 +284,7 @@ function updateAccountIdentityUpdatesCreatedSnapshot(account: Account, timestamp
 }
 
 function updateAccountIdentityUpdateBytesCreatedSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
-    const id = `accountIdentityUpdateBytesCreated-${account.address}-${timestamp.toString()}`;
+    const id = `IdentityUpdateBytesCreatedSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = IdentityUpdateBytesCreatedSnapshot.load(id);
 
@@ -318,17 +300,13 @@ function updateAccountIdentityUpdateBytesCreatedSnapshot(account: Account, times
     snapshot.save();
 }
 
-function updateAccountIdentityUpdateTransactionFeesSnapshot(
-    account: Account,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
-    const id = `accountIdentityUpdateTransactionFees-${account.address}-${timestamp.toString()}`;
+function updateAccountIdentityUpdateFeesSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+    const id = `IdentityUpdateFeesSnapshot-${account.address}-${timestamp.toString()}`;
 
-    let snapshot = IdentityUpdateTransactionFeesSnapshot.load(id);
+    let snapshot = IdentityUpdateFeesSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new IdentityUpdateTransactionFeesSnapshot(id);
+        snapshot = new IdentityUpdateFeesSnapshot(id);
 
         snapshot.account = account.id;
         snapshot.timestamp = timestamp;
