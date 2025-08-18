@@ -56,20 +56,15 @@ export function handleMessageSent(event: MessageSentEvent): void {
 
     broadcaster.totalMessagesSent = broadcaster.totalMessagesSent.plus(BigInt.fromI32(1));
 
-    updateGroupMessageBroadcasterTotalMessagesSentSnapshot(broadcaster, timestamp, broadcaster.totalMessagesSent);
+    updateGroupMessageBroadcasterTotalMessagesSentSnapshot(timestamp, broadcaster.totalMessagesSent);
 
     broadcaster.totalMessageBytesSent = broadcaster.totalMessageBytesSent.plus(BigInt.fromI32(messageLength));
 
-    updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(
-        broadcaster,
-        timestamp,
-        broadcaster.totalMessageBytesSent
-    );
+    updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(timestamp, broadcaster.totalMessageBytesSent);
 
     broadcaster.totalMessageTransactionFees = broadcaster.totalMessageTransactionFees.plus(transactionFee);
 
     updateGroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(
-        broadcaster,
         timestamp,
         broadcaster.totalMessageTransactionFees
     );
@@ -96,7 +91,7 @@ export function handleMinPayloadSizeUpdated(event: MinPayloadSizeUpdatedEvent): 
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.minPayloadSize = event.params.size;
-    updateGroupMessageBroadcasterMinPayloadSizeSnapshot(broadcaster, timestamp, broadcaster.minPayloadSize);
+    updateGroupMessageBroadcasterMinPayloadSizeSnapshot(timestamp, broadcaster.minPayloadSize);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -107,7 +102,7 @@ export function handleMaxPayloadSizeUpdated(event: MaxPayloadSizeUpdatedEvent): 
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.maxPayloadSize = event.params.size;
-    updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(broadcaster, timestamp, broadcaster.maxPayloadSize);
+    updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(timestamp, broadcaster.maxPayloadSize);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -118,7 +113,7 @@ export function handlePauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.paused = event.params.paused;
-    updateGroupMessageBroadcasterPausedSnapshot(broadcaster, timestamp, broadcaster.paused);
+    updateGroupMessageBroadcasterPausedSnapshot(timestamp, broadcaster.paused);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -129,7 +124,7 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.payloadBootstrapper = event.params.payloadBootstrapper.toHexString();
-    updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(broadcaster, timestamp, broadcaster.payloadBootstrapper);
+    updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(timestamp, broadcaster.payloadBootstrapper);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -160,11 +155,7 @@ export function getGroupMessageBroadcaster(groupMessageBroadcasterAddress: Addre
 
 /* ============ Group Message Broadcaster Snapshot Helpers ============ */
 
-function updateGroupMessageBroadcasterMinPayloadSizeSnapshot(
-    broadcaster: GroupMessageBroadcaster,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateGroupMessageBroadcasterMinPayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `groupMessageBroadcasterMinPayloadSize-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterMinPayloadSizeSnapshot.load(id);
@@ -180,11 +171,7 @@ function updateGroupMessageBroadcasterMinPayloadSizeSnapshot(
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(
-    broadcaster: GroupMessageBroadcaster,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `groupMessageBroadcasterMaxPayloadSize-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterMaxPayloadSizeSnapshot.load(id);
@@ -200,11 +187,7 @@ function updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterPausedSnapshot(
-    broadcaster: GroupMessageBroadcaster,
-    timestamp: Timestamp,
-    value: boolean
-): void {
+function updateGroupMessageBroadcasterPausedSnapshot(timestamp: Timestamp, value: boolean): void {
     const id = `groupMessageBroadcasterPaused-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterPausedSnapshot.load(id);
@@ -220,11 +203,7 @@ function updateGroupMessageBroadcasterPausedSnapshot(
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(
-    broadcaster: GroupMessageBroadcaster,
-    timestamp: Timestamp,
-    value: string
-): void {
+function updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(timestamp: Timestamp, value: string): void {
     const id = `groupMessageBroadcasterPayloadBootstrapper-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterPayloadBootstrapperSnapshot.load(id);
@@ -240,11 +219,7 @@ function updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterTotalMessagesSentSnapshot(
-    broadcaster: GroupMessageBroadcaster,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateGroupMessageBroadcasterTotalMessagesSentSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `groupMessageBroadcasterTotalMessagesSent-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterTotalMessagesSentSnapshot.load(id);
@@ -260,11 +235,7 @@ function updateGroupMessageBroadcasterTotalMessagesSentSnapshot(
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(
-    broadcaster: GroupMessageBroadcaster,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `groupMessageBroadcasterTotalMessageBytesSent-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterTotalMessageBytesSentSnapshot.load(id);
@@ -280,11 +251,7 @@ function updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(
-    broadcaster: GroupMessageBroadcaster,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateGroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `groupMessageBroadcasterTotalMessageTransactionFees-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterTotalMessageTransactionFeesSnapshot.load(id);

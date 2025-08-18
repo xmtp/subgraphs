@@ -43,7 +43,7 @@ export function handleDepositReceived(event: DepositReceivedEvent): void {
     account.save();
 
     gateway.totalDepositsReceived = gateway.totalDepositsReceived.plus(amount);
-    updateAppChainGatewayTotalDepositsReceivedSnapshot(gateway, timestamp, gateway.totalDepositsReceived);
+    updateAppChainGatewayTotalDepositsReceivedSnapshot(timestamp, gateway.totalDepositsReceived);
 
     gateway.lastUpdate = timestamp;
     gateway.save();
@@ -95,7 +95,7 @@ export function handlePauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
     const timestamp = event.block.timestamp.toI32();
 
     gateway.paused = event.params.paused;
-    updateAppChainGatewayPausedSnapshot(gateway, timestamp, gateway.paused);
+    updateAppChainGatewayPausedSnapshot(timestamp, gateway.paused);
 
     gateway.lastUpdate = timestamp;
     gateway.save();
@@ -118,7 +118,7 @@ export function handleWithdrawal(event: WithdrawalEvent): void {
     account.save();
 
     gateway.totalWithdrawn = gateway.totalWithdrawn.plus(amount);
-    updateAppChainGatewayTotalWithdrawnSnapshot(gateway, timestamp, gateway.totalWithdrawn);
+    updateAppChainGatewayTotalWithdrawnSnapshot(timestamp, gateway.totalWithdrawn);
 
     gateway.lastUpdate = timestamp;
     gateway.save();
@@ -157,11 +157,7 @@ function getAppChainGateway(address: Address): AppChainGateway {
 
 /* ============ AppChainGateway Snapshot Helpers ============ */
 
-function updateAppChainGatewayTotalDepositsReceivedSnapshot(
-    gateway: AppChainGateway,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateAppChainGatewayTotalDepositsReceivedSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `appChainGatewayTotalDepositsReceived-${timestamp.toString()}`;
 
     let snapshot = AppChainGatewayTotalDepositsReceivedSnapshot.load(id);
@@ -177,7 +173,7 @@ function updateAppChainGatewayTotalDepositsReceivedSnapshot(
     snapshot.save();
 }
 
-function updateAppChainGatewayPausedSnapshot(gateway: AppChainGateway, timestamp: Timestamp, value: boolean): void {
+function updateAppChainGatewayPausedSnapshot(timestamp: Timestamp, value: boolean): void {
     const id = `appChainGatewayPaused-${timestamp.toString()}`;
 
     let snapshot = AppChainGatewayPausedSnapshot.load(id);
@@ -193,11 +189,7 @@ function updateAppChainGatewayPausedSnapshot(gateway: AppChainGateway, timestamp
     snapshot.save();
 }
 
-function updateAppChainGatewayTotalWithdrawnSnapshot(
-    gateway: AppChainGateway,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateAppChainGatewayTotalWithdrawnSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `appChainGatewayTotalWithdrawn-${timestamp.toString()}`;
 
     let snapshot = AppChainGatewayTotalWithdrawnSnapshot.load(id);

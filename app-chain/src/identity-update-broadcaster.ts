@@ -57,7 +57,6 @@ export function handleIdentityUpdateCreated(event: IdentityUpdateCreatedEvent): 
     broadcaster.totalIdentityUpdatesCreated = broadcaster.totalIdentityUpdatesCreated.plus(BigInt.fromI32(1));
 
     updateIdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(
-        broadcaster,
         timestamp,
         broadcaster.totalIdentityUpdatesCreated
     );
@@ -67,7 +66,6 @@ export function handleIdentityUpdateCreated(event: IdentityUpdateCreatedEvent): 
     );
 
     updateIdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(
-        broadcaster,
         timestamp,
         broadcaster.totalIdentityUpdateBytesCreated
     );
@@ -76,7 +74,6 @@ export function handleIdentityUpdateCreated(event: IdentityUpdateCreatedEvent): 
         broadcaster.totalIdentityUpdateTransactionFees.plus(transactionFee);
 
     updateIdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot(
-        broadcaster,
         timestamp,
         broadcaster.totalIdentityUpdateTransactionFees
     );
@@ -103,7 +100,7 @@ export function handleMinPayloadSizeUpdated(event: MinPayloadSizeUpdatedEvent): 
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.minPayloadSize = event.params.size;
-    updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(broadcaster, timestamp, broadcaster.minPayloadSize);
+    updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(timestamp, broadcaster.minPayloadSize);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -114,7 +111,7 @@ export function handleMaxPayloadSizeUpdated(event: MaxPayloadSizeUpdatedEvent): 
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.maxPayloadSize = event.params.size;
-    updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(broadcaster, timestamp, broadcaster.maxPayloadSize);
+    updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(timestamp, broadcaster.maxPayloadSize);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -125,7 +122,7 @@ export function handlePauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.paused = event.params.paused;
-    updateIdentityUpdateBroadcasterPausedSnapshot(broadcaster, timestamp, broadcaster.paused);
+    updateIdentityUpdateBroadcasterPausedSnapshot(timestamp, broadcaster.paused);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -136,7 +133,7 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
     const timestamp = event.block.timestamp.toI32();
 
     broadcaster.payloadBootstrapper = event.params.payloadBootstrapper.toHexString();
-    updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(broadcaster, timestamp, broadcaster.payloadBootstrapper);
+    updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(timestamp, broadcaster.payloadBootstrapper);
 
     broadcaster.lastUpdate = timestamp;
     broadcaster.save();
@@ -167,11 +164,7 @@ export function getIdentityUpdateBroadcaster(identityUpdateBroadcasterAddress: A
 
 /* ============ Identity Update Broadcaster Snapshot Helpers ============ */
 
-function updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(
-    broadcaster: IdentityUpdateBroadcaster,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `identityUpdateBroadcasterMinPayloadSize-${timestamp.toString()}`;
 
     let snapshot = IdentityUpdateBroadcasterMinPayloadSizeSnapshot.load(id);
@@ -187,11 +180,7 @@ function updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(
-    broadcaster: IdentityUpdateBroadcaster,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `identityUpdateBroadcasterMaxPayloadSize-${timestamp.toString()}`;
 
     let snapshot = IdentityUpdateBroadcasterMaxPayloadSizeSnapshot.load(id);
@@ -207,11 +196,7 @@ function updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterPausedSnapshot(
-    broadcaster: IdentityUpdateBroadcaster,
-    timestamp: Timestamp,
-    value: boolean
-): void {
+function updateIdentityUpdateBroadcasterPausedSnapshot(timestamp: Timestamp, value: boolean): void {
     const id = `identityUpdateBroadcasterPaused-${timestamp.toString()}`;
 
     let snapshot = IdentityUpdateBroadcasterPausedSnapshot.load(id);
@@ -227,11 +212,7 @@ function updateIdentityUpdateBroadcasterPausedSnapshot(
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(
-    broadcaster: IdentityUpdateBroadcaster,
-    timestamp: Timestamp,
-    value: string
-): void {
+function updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(timestamp: Timestamp, value: string): void {
     const id = `identityUpdateBroadcasterPayloadBootstrapper-${timestamp.toString()}`;
 
     let snapshot = IdentityUpdateBroadcasterPayloadBootstrapperSnapshot.load(id);
@@ -247,11 +228,7 @@ function updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(
     snapshot.save();
 }
 
-function updateIdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(
-    broadcaster: IdentityUpdateBroadcaster,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
+function updateIdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(timestamp: Timestamp, value: BigInt): void {
     const id = `identityUpdateBroadcasterTotalIdentityUpdatesCreated-${timestamp.toString()}`;
 
     let snapshot = IdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot.load(id);
@@ -268,7 +245,6 @@ function updateIdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(
 }
 
 function updateIdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(
-    broadcaster: IdentityUpdateBroadcaster,
     timestamp: Timestamp,
     value: BigInt
 ): void {
@@ -288,7 +264,6 @@ function updateIdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(
 }
 
 function updateIdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot(
-    broadcaster: IdentityUpdateBroadcaster,
     timestamp: Timestamp,
     value: BigInt
 ): void {

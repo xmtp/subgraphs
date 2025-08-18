@@ -17,7 +17,7 @@ export function handleParameterSet(event: ParameterSetEvent): void {
     registry.lastUpdate = timestamp;
     registry.save();
 
-    const parameter = getAppChainParameterRegistryParameter(registry, event.params.key.toString());
+    const parameter = getAppChainParameterRegistryParameter(event.params.key.toString());
 
     parameter.value = event.params.value.toHexString();
     updateAppChainRegistryParameterValueSnapshot(parameter, timestamp, parameter.value);
@@ -43,10 +43,7 @@ export function getAppChainParameterRegistry(appChainParameterRegistryAddress: A
     return registry;
 }
 
-export function getAppChainParameterRegistryParameter(
-    registry: AppChainParameterRegistry,
-    key: string
-): AppChainParameterRegistryParameter {
+export function getAppChainParameterRegistryParameter(key: string): AppChainParameterRegistryParameter {
     const id = `appChainParameterRegistryParameter-${key}`;
 
     let parameter = AppChainParameterRegistryParameter.load(id);
