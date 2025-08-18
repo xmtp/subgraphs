@@ -1,6 +1,10 @@
 import { Address, Timestamp } from '@graphprotocol/graph-ts';
 
-import { AppChainParameterRegistry, Parameter, ParameterValueSnapshot } from '../generated/schema';
+import {
+    AppChainParameterRegistry,
+    AppChainParameterRegistryParameter,
+    AppChainParameterRegistryParameterValueSnapshot,
+} from '../generated/schema';
 
 import { ParameterSet as ParameterSetEvent } from '../generated/AppChainParameterRegistry/AppChainParameterRegistry';
 
@@ -13,10 +17,10 @@ export function handleParameterSet(event: ParameterSetEvent): void {
     registry.lastUpdate = timestamp;
     registry.save();
 
-    const parameter = getParameter(registry, event.params.key.toString());
+    const parameter = getAppChainParameterRegistryParameter(registry, event.params.key.toString());
 
     parameter.value = event.params.value.toHexString();
-    updateParameterValueSnapshot(parameter, timestamp, parameter.value);
+    updateAppChainRegistryParameterValueSnapshot(parameter, timestamp, parameter.value);
 
     parameter.lastUpdate = timestamp;
     parameter.save();
@@ -39,19 +43,21 @@ export function getAppChainParameterRegistry(appChainParameterRegistryAddress: A
     return registry;
 }
 
-export function getParameter(registry: AppChainParameterRegistry, key: string): Parameter {
-    const id = `parameter-${key}`;
+export function getAppChainParameterRegistryParameter(
+    registry: AppChainParameterRegistry,
+    key: string
+): AppChainParameterRegistryParameter {
+    const id = `appChainParameterRegistryParameter-${key}`;
 
-    let parameter = Parameter.load(id);
+    let parameter = AppChainParameterRegistryParameter.load(id);
 
     if (parameter) return parameter;
 
-    parameter = new Parameter(id);
+    parameter = new AppChainParameterRegistryParameter(id);
 
     parameter.lastUpdate = 0;
     parameter.key = key;
     parameter.value = '';
-    parameter.appChainParameterRegistry = registry.id;
 
     parameter.save();
 
@@ -60,13 +66,17 @@ export function getParameter(registry: AppChainParameterRegistry, key: string): 
 
 /* ============ Snapshot Helpers ============ */
 
-function updateParameterValueSnapshot(parameter: Parameter, timestamp: Timestamp, value: string): void {
-    const id = `parameterValueSnapshot-${parameter.key}-${timestamp.toString()}`;
+function updateAppChainRegistryParameterValueSnapshot(
+    parameter: AppChainParameterRegistryParameter,
+    timestamp: Timestamp,
+    value: string
+): void {
+    const id = `appChainParameterRegistryParameterValueSnapshot-${parameter.key}-${timestamp.toString()}`;
 
-    let snapshot = ParameterValueSnapshot.load(id);
+    let snapshot = AppChainParameterRegistryParameterValueSnapshot.load(id);
 
     if (!snapshot) {
-        snapshot = new ParameterValueSnapshot(id);
+        snapshot = new AppChainParameterRegistryParameterValueSnapshot(id);
 
         snapshot.parameter = parameter.id;
         snapshot.timestamp = timestamp;

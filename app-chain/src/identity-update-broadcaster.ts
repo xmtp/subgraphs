@@ -86,7 +86,6 @@ export function handleIdentityUpdateCreated(event: IdentityUpdateCreatedEvent): 
 
     const identityUpdate = new IdentityUpdate(`identityUpdate-${transactionHash}`);
 
-    identityUpdate.identityUpdateBroadcaster = broadcaster.id;
     identityUpdate.account = account.id;
     identityUpdate.inboxId = event.params.inboxId.toHexString();
     identityUpdate.sequenceId = event.params.sequenceId;
@@ -180,7 +179,6 @@ function updateIdentityUpdateBroadcasterMinPayloadSizeSnapshot(
     if (!snapshot) {
         snapshot = new IdentityUpdateBroadcasterMinPayloadSizeSnapshot(id);
 
-        snapshot.identityUpdateBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -201,7 +199,6 @@ function updateIdentityUpdateBroadcasterMaxPayloadSizeSnapshot(
     if (!snapshot) {
         snapshot = new IdentityUpdateBroadcasterMaxPayloadSizeSnapshot(id);
 
-        snapshot.identityUpdateBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -222,7 +219,6 @@ function updateIdentityUpdateBroadcasterPausedSnapshot(
     if (!snapshot) {
         snapshot = new IdentityUpdateBroadcasterPausedSnapshot(id);
 
-        snapshot.identityUpdateBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -243,7 +239,6 @@ function updateIdentityUpdateBroadcasterPayloadBootstrapperSnapshot(
     if (!snapshot) {
         snapshot = new IdentityUpdateBroadcasterPayloadBootstrapperSnapshot(id);
 
-        snapshot.identityUpdateBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -264,7 +259,6 @@ function updateIdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(
     if (!snapshot) {
         snapshot = new IdentityUpdateBroadcasterTotalIdentityUpdatesCreatedSnapshot(id);
 
-        snapshot.identityUpdateBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -285,7 +279,6 @@ function updateIdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(
     if (!snapshot) {
         snapshot = new IdentityUpdateBroadcasterTotalIdentityUpdateBytesCreatedSnapshot(id);
 
-        snapshot.identityUpdateBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -306,7 +299,6 @@ function updateIdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapsh
     if (!snapshot) {
         snapshot = new IdentityUpdateBroadcasterTotalIdentityUpdateTransactionFeesSnapshot(id);
 
-        snapshot.identityUpdateBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 

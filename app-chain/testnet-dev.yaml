@@ -101,11 +101,11 @@ dataSources:
               - AppChainGatewayPausedSnapshot
               - AppChainGatewayTotalDepositedSnapshot
               - AppChainGatewayTotalWithdrawnSnapshot
-              - Deposit
+              - AppChainGatewayDeposit
               - DepositsReceivedSnapshot
-              - ParameterReceival
-              - ReceivedParameter
-              - Withdrawal
+              - AppChainGatewayParameterReceival
+              - AppChainGatewayReceivedParameter
+              - AppChainGatewayWithdrawal
               - WithdrawnSnapshot
           abis:
               - name: AppChainGateway
@@ -133,8 +133,8 @@ dataSources:
           language: wasm/assemblyscript
           entities:
               - AppChainParameterRegistry
-              - Parameter
-              - ParameterValueSnapshot
+              - AppChainParameterRegistryParameter
+              - AppChainParameterRegistryParameterValueSnapshot
           abis:
               - name: AppChainParameterRegistry
                 file: ./abis/AppChainParameterRegistry.abi.json

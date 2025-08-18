@@ -79,7 +79,6 @@ export function handleMessageSent(event: MessageSentEvent): void {
 
     const groupMessage = new GroupMessage(`groupMessage-${transactionHash}`);
 
-    groupMessage.groupMessageBroadcaster = broadcaster.id;
     groupMessage.account = account.id;
     groupMessage.groupId = event.params.groupId.toHexString();
     groupMessage.sequenceId = event.params.sequenceId;
@@ -173,7 +172,6 @@ function updateGroupMessageBroadcasterMinPayloadSizeSnapshot(
     if (!snapshot) {
         snapshot = new GroupMessageBroadcasterMinPayloadSizeSnapshot(id);
 
-        snapshot.groupMessageBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -194,7 +192,6 @@ function updateGroupMessageBroadcasterMaxPayloadSizeSnapshot(
     if (!snapshot) {
         snapshot = new GroupMessageBroadcasterMaxPayloadSizeSnapshot(id);
 
-        snapshot.groupMessageBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -215,7 +212,6 @@ function updateGroupMessageBroadcasterPausedSnapshot(
     if (!snapshot) {
         snapshot = new GroupMessageBroadcasterPausedSnapshot(id);
 
-        snapshot.groupMessageBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -236,7 +232,6 @@ function updateGroupMessageBroadcasterPayloadBootstrapperSnapshot(
     if (!snapshot) {
         snapshot = new GroupMessageBroadcasterPayloadBootstrapperSnapshot(id);
 
-        snapshot.groupMessageBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -257,7 +252,6 @@ function updateGroupMessageBroadcasterTotalMessagesSentSnapshot(
     if (!snapshot) {
         snapshot = new GroupMessageBroadcasterTotalMessagesSentSnapshot(id);
 
-        snapshot.groupMessageBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -278,7 +272,6 @@ function updateGroupMessageBroadcasterTotalMessageBytesSentSnapshot(
     if (!snapshot) {
         snapshot = new GroupMessageBroadcasterTotalMessageBytesSentSnapshot(id);
 
-        snapshot.groupMessageBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -299,7 +292,6 @@ function updateGroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(
     if (!snapshot) {
         snapshot = new GroupMessageBroadcasterTotalMessageTransactionFeesSnapshot(id);
 
-        snapshot.groupMessageBroadcaster = broadcaster.id;
         snapshot.timestamp = timestamp;
     }
 
