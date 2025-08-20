@@ -1,11 +1,19 @@
-import { Address, Bytes, Timestamp } from '@graphprotocol/graph-ts';
+import { Address, Bytes, dataSource } from '@graphprotocol/graph-ts';
 
-import { AppChainParameterRegistry, Parameter, ParameterValueSnapshot } from '../generated/schema';
+import {
+    AppChainParameterRegistry,
+    Parameter,
+    ParameterRegistryImplementationSnapshot,
+    ParameterValueSnapshot,
+} from '../generated/schema';
 
-import { ParameterSet as ParameterSetEvent } from '../generated/AppChainParameterRegistry/AppChainParameterRegistry';
-import { ParameterSet as IndexedParameterSetEvent } from '../generated/AppChainParameterRegistry-v0.5.5/AppChainParameterRegistry_v0_5_5';
+import {
+    ParameterSet as ParameterSetEvent,
+    ParameterSet1 as IndexedParameterSetEvent,
+    Upgraded as UpgradedEvent,
+} from '../generated/AppChainParameterRegistry/AppChainParameterRegistry';
 
-/* ============ Handlers ============ */
+const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
 
 // NOTE: Do not sort this array, as it aligns with the key hashes array.
 const KEYS = [
@@ -22,6 +30,7 @@ const KEYS = [
     'xmtp.factory.migrator',
     'xmtp.groupMessageBroadcaster.migrator',
     'xmtp.identityUpdateBroadcaster.migrator',
+    'xmtp.appChainParameterRegistry.isAdmin.0xb64d5bf62f30512bd130c0d7c80db7ac1e6801a3',
 ];
 
 // NOTE: Do not sort this array, as it aligns with the keys array.
@@ -39,13 +48,18 @@ const KEY_HASHES = [
     '0xd6f358750662d72d2fe409b9e04ef835c211426506901649e93907fd752dafa0',
     '0x3ba377e4c358489b6f86284308f8ea129086cf69bd0139708477a1bc2df6f1ff',
     '0xab84f206ec0b223276553f661ed29979b630ceae43567b7f008041d68049a6be',
+    '0x8275f5f15ef0ce0a2fda70a6d150c115c89f34efd71a45726210531806a0e08b',
 ];
 
+/* ============ Handlers ============ */
+
 export function handleIndexParameterSet(event: IndexedParameterSetEvent): void {
+    const timestamp = event.block.timestamp.toI32();
+
     for (let i = 0; i < KEY_HASHES.length; i++) {
         if (!event.params.key.equals(Bytes.fromHexString(KEY_HASHES[i]))) continue;
 
-        handleParameter(event.address, KEYS[i], event.params.value, event.block.timestamp.toI32());
+        return handleParameter(event.address, KEYS[i], event.params.value, timestamp);
     }
 
     throw new Error(`Unknown parameter key: ${event.params.key.toHexString()}`);
@@ -70,6 +84,17 @@ function handleParameter(parameterRegistryAddress: Address, key: string, value: 
     parameter.save();
 }
 
+export function handleUpgraded(event: UpgradedEvent): void {
+    const registry = getAppChainParameterRegistry(event.address);
+    const timestamp = event.block.timestamp.toI32();
+
+    registry.implementation = event.params.implementation.toHexString();
+    updateImplementationSnapshot(timestamp, registry.implementation);
+
+    registry.lastUpdate = timestamp;
+    registry.save();
+}
+
 /* ============ Entity Helpers ============ */
 
 export function getAppChainParameterRegistry(address: Address): AppChainParameterRegistry {
@@ -83,7 +108,7 @@ export function getAppChainParameterRegistry(address: Address): AppChainParamete
 
     registry.lastUpdate = 0;
     registry.address = address.toHexString();
-    registry.save();
+    registry.implementation = STARTING_IMPLEMENTATION;
 
     return registry;
 }
@@ -101,14 +126,28 @@ export function getParameter(key: string): Parameter {
     parameter.key = key;
     parameter.value = '';
 
-    parameter.save();
-
     return parameter;
 }
 
 /* ============ Snapshot Helpers ============ */
 
-function updateParameterValueSnapshot(parameter: Parameter, timestamp: Timestamp, value: string): void {
+function updateImplementationSnapshot(timestamp: i32, value: string): void {
+    const id = `AppChainParameterRegistryImplementationSnapshot-${timestamp.toString()}`;
+
+    let snapshot = ParameterRegistryImplementationSnapshot.load(id);
+
+    if (!snapshot) {
+        snapshot = new ParameterRegistryImplementationSnapshot(id);
+
+        snapshot.timestamp = timestamp;
+    }
+
+    snapshot.value = value;
+
+    snapshot.save();
+}
+
+function updateParameterValueSnapshot(parameter: Parameter, timestamp: i32, value: string): void {
     const id = `ParameterValueSnapshot-${parameter.key}-${timestamp.toString()}`;
 
     let snapshot = ParameterValueSnapshot.load(id);

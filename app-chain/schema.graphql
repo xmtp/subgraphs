@@ -175,6 +175,13 @@ interface GroupMessageBroadcasterSnapshotEntity implements SnapshotEntity {
 
 # ============ GroupMessageBroadcaster - State Variable Snapshots ============ #
 
+type GroupMessageBroadcasterImplementationSnapshot implements GroupMessageBroadcasterSnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
 type MinGroupMessagePayloadSizeSnapshot implements GroupMessageBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
     @entity(immutable: false) {
     id: ID! @unique
@@ -235,6 +242,7 @@ type GroupMessageBroadcaster @entity(immutable: false) {
     address: String! @unique
 
     # State Variables (and snapshots)
+    implementation: String!
     minPayloadSize: BigInt!
     maxPayloadSize: BigInt!
     paused: Boolean!
@@ -254,6 +262,13 @@ interface IdentityUpdateBroadcasterSnapshotEntity implements SnapshotEntity {
 }
 
 # ============ IdentityUpdateBroadcaster - State Variable Snapshots ============ #
+
+type IdentityUpdateBroadcasterImplementationSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
 
 type MinIdentityUpdatePayloadSizeSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
     @entity(immutable: false) {
@@ -315,6 +330,7 @@ type IdentityUpdateBroadcaster @entity(immutable: false) {
     address: String! @unique
 
     # State Variables (and snapshots)
+    implementation: String!
     minPayloadSize: BigInt!
     maxPayloadSize: BigInt!
     paused: Boolean!
@@ -354,6 +370,22 @@ type Parameter @entity(immutable: false) {
     valueSnapshot: ParameterValueSnapshot! @derivedFrom(field: "parameter")
 }
 
+# ============ AppChainParameterRegistry - Snapshot Interfaces ============ #
+
+interface ParameterRegistrySnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+}
+
+# ============ AppChainParameterRegistry - State Variable Snapshots ============ #
+
+type ParameterRegistryImplementationSnapshot implements ParameterRegistrySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
 # ============ AppChainParameterRegistry - Entity ============ #
 
 type AppChainParameterRegistry @entity(immutable: false) {
@@ -361,6 +393,9 @@ type AppChainParameterRegistry @entity(immutable: false) {
     id: ID! @unique
     lastUpdate: Timestamp!
     address: String! @unique
+
+    # State Variable Mappings
+    implementation: String!
 }
 
 # ============ AppChainGateway - Snapshot Interfaces ============ #
@@ -371,6 +406,13 @@ interface AppChainGatewaySnapshotEntity implements SnapshotEntity {
 }
 
 # ============ AppChainGateway - State Variable Snapshots ============ #
+
+type AppChainGatewayImplementationSnapshot implements AppChainGatewaySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
 
 type AppChainGatewayPausedSnapshot implements AppChainGatewaySnapshotEntity & BooleanSnapshotEntity & SnapshotEntity
     @entity(immutable: false) {
@@ -435,6 +477,7 @@ type AppChainGateway @entity(immutable: false) {
     address: String! @unique
 
     # State Variable Mappings
+    implementation: String!
     paused: Boolean!
 
     # Lifetime Totals (and snapshots)

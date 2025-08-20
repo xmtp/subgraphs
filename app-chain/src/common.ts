@@ -1,4 +1,4 @@
-import { Address, BigInt, Timestamp } from '@graphprotocol/graph-ts';
+import { Address, BigInt } from '@graphprotocol/graph-ts';
 
 import { Account, FeesSnapshot } from '../generated/schema';
 
@@ -31,7 +31,7 @@ export function getAccount(address: Address): Account {
 
 /* ============ Account Snapshot Helpers ============ */
 
-export function updateAccountFeesSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+export function updateAccountFeesSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `TransactionFees-${account.address}-${timestamp.toString()}`;
 
     let snapshot = FeesSnapshot.load(id);

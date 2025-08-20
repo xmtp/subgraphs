@@ -1,10 +1,11 @@
-import { Address, BigInt, Timestamp } from '@graphprotocol/graph-ts';
+import { Address, BigInt, dataSource } from '@graphprotocol/graph-ts';
 import { ethereum } from '@graphprotocol/graph-ts/chain/ethereum';
 
 import {
     Account,
     GroupMessage,
     GroupMessageBroadcaster,
+    GroupMessageBroadcasterImplementationSnapshot,
     GroupMessageBroadcasterPausedSnapshot,
     GroupMessageBytesSentSnapshot,
     GroupMessageFeesSnapshot,
@@ -23,9 +24,12 @@ import {
     MinPayloadSizeUpdated as MinPayloadSizeUpdatedEvent,
     PauseStatusUpdated as PauseStatusUpdatedEvent,
     PayloadBootstrapperUpdated as PayloadBootstrapperUpdatedEvent,
+    Upgraded as UpgradedEvent,
 } from '../generated/GroupMessageBroadcaster/GroupMessageBroadcaster';
 
 import { ZERO_ADDRESS, getAccount, updateAccountFeesSnapshot } from './common';
+
+const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
 
 /* ============ Handlers ============ */
 
@@ -124,6 +128,17 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
     broadcaster.save();
 }
 
+export function handleUpgraded(event: UpgradedEvent): void {
+    const broadcaster = getGroupMessageBroadcaster(event.address);
+    const timestamp = event.block.timestamp.toI32();
+
+    broadcaster.implementation = event.params.implementation.toHexString();
+    updateImplementationSnapshot(timestamp, broadcaster.implementation);
+
+    broadcaster.lastUpdate = timestamp;
+    broadcaster.save();
+}
+
 /* ============ Entity Helpers ============ */
 
 export function getGroupMessageBroadcaster(address: Address): GroupMessageBroadcaster {
@@ -137,6 +152,7 @@ export function getGroupMessageBroadcaster(address: Address): GroupMessageBroadc
 
     broadcaster.lastUpdate = 0;
     broadcaster.address = address.toHexString();
+    broadcaster.implementation = STARTING_IMPLEMENTATION;
     broadcaster.minPayloadSize = BigInt.fromI32(0);
     broadcaster.maxPayloadSize = BigInt.fromI32(0);
     broadcaster.paused = false;
@@ -150,7 +166,23 @@ export function getGroupMessageBroadcaster(address: Address): GroupMessageBroadc
 
 /* ============ Group Message Broadcaster Snapshot Helpers ============ */
 
-function updateMinGroupMessagePayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateImplementationSnapshot(timestamp: i32, value: string): void {
+    const id = `GroupMessageBroadcasterImplementationSnapshot-${timestamp.toString()}`;
+
+    let snapshot = GroupMessageBroadcasterImplementationSnapshot.load(id);
+
+    if (!snapshot) {
+        snapshot = new GroupMessageBroadcasterImplementationSnapshot(id);
+
+        snapshot.timestamp = timestamp;
+    }
+
+    snapshot.value = value;
+
+    snapshot.save();
+}
+
+function updateMinGroupMessagePayloadSizeSnapshot(timestamp: i32, value: BigInt): void {
     const id = `MinGroupMessagePayloadSizeSnapshot-${timestamp.toString()}`;
 
     let snapshot = MinGroupMessagePayloadSizeSnapshot.load(id);
@@ -166,7 +198,7 @@ function updateMinGroupMessagePayloadSizeSnapshot(timestamp: Timestamp, value: B
     snapshot.save();
 }
 
-function updateMaxGroupMessagePayloadSizeSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateMaxGroupMessagePayloadSizeSnapshot(timestamp: i32, value: BigInt): void {
     const id = `MaxGroupMessagePayloadSizeSnapshot-${timestamp.toString()}`;
 
     let snapshot = MaxGroupMessagePayloadSizeSnapshot.load(id);
@@ -182,7 +214,7 @@ function updateMaxGroupMessagePayloadSizeSnapshot(timestamp: Timestamp, value: B
     snapshot.save();
 }
 
-function updateGroupMessageBroadcasterPausedSnapshot(timestamp: Timestamp, value: boolean): void {
+function updateGroupMessageBroadcasterPausedSnapshot(timestamp: i32, value: boolean): void {
     const id = `GroupMessageBroadcasterPausedSnapshot-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBroadcasterPausedSnapshot.load(id);
@@ -198,7 +230,7 @@ function updateGroupMessageBroadcasterPausedSnapshot(timestamp: Timestamp, value
     snapshot.save();
 }
 
-function updateGroupMessagePayloadBootstrapperSnapshot(timestamp: Timestamp, value: string): void {
+function updateGroupMessagePayloadBootstrapperSnapshot(timestamp: i32, value: string): void {
     const id = `GroupMessagePayloadBootstrapperSnapshot-${timestamp.toString()}`;
 
     let snapshot = GroupMessagePayloadBootstrapperSnapshot.load(id);
@@ -214,7 +246,7 @@ function updateGroupMessagePayloadBootstrapperSnapshot(timestamp: Timestamp, val
     snapshot.save();
 }
 
-function updateTotalGroupMessagesSentSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateTotalGroupMessagesSentSnapshot(timestamp: i32, value: BigInt): void {
     const id = `TotalGroupMessagesSentSnapshot-${timestamp.toString()}`;
 
     let snapshot = TotalGroupMessagesSentSnapshot.load(id);
@@ -230,7 +262,7 @@ function updateTotalGroupMessagesSentSnapshot(timestamp: Timestamp, value: BigIn
     snapshot.save();
 }
 
-function updateTotalGroupMessageBytesSentSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateTotalGroupMessageBytesSentSnapshot(timestamp: i32, value: BigInt): void {
     const id = `TotalGroupMessageBytesSentSnapshot-${timestamp.toString()}`;
 
     let snapshot = TotalGroupMessageBytesSentSnapshot.load(id);
@@ -246,7 +278,7 @@ function updateTotalGroupMessageBytesSentSnapshot(timestamp: Timestamp, value: B
     snapshot.save();
 }
 
-function updateTotalGroupMessageFeesSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateTotalGroupMessageFeesSnapshot(timestamp: i32, value: BigInt): void {
     const id = `TotalGroupMessageFeesSnapshot-${timestamp.toString()}`;
 
     let snapshot = TotalGroupMessageFeesSnapshot.load(id);
@@ -264,7 +296,7 @@ function updateTotalGroupMessageFeesSnapshot(timestamp: Timestamp, value: BigInt
 
 /* ============ Account Snapshot Helpers ============ */
 
-function updateAccountGroupMessagesSentSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateAccountGroupMessagesSentSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `GroupMessagesSentSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = GroupMessagesSentSnapshot.load(id);
@@ -281,7 +313,7 @@ function updateAccountGroupMessagesSentSnapshot(account: Account, timestamp: Tim
     snapshot.save();
 }
 
-function updateAccountGroupMessageBytesSentSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateAccountGroupMessageBytesSentSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `GroupMessageBytesSentSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = GroupMessageBytesSentSnapshot.load(id);
@@ -298,7 +330,7 @@ function updateAccountGroupMessageBytesSentSnapshot(account: Account, timestamp:
     snapshot.save();
 }
 
-function updateAccountGroupMessageFeesSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateAccountGroupMessageFeesSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `GroupMessageFeesSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = GroupMessageFeesSnapshot.load(id);
