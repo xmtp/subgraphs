@@ -1,9 +1,9 @@
 import { Address, BigInt, Timestamp } from '@graphprotocol/graph-ts';
 
 import {
+    Account,
     PayerRegistry,
     PayerRegistryExcessSnapshot,
-    PayerRegistryFeeTokenBalanceSnapshot,
     PayerRegistryTotalWithdrawableSnapshot,
 } from '../generated/schema';
 
@@ -11,8 +11,8 @@ const ZERO_ADDRESS = Address.fromString('0x0000000000000000000000000000000000000
 
 /* ============ Entity Helpers ============ */
 
-export function getPayerRegistry(payerRegistryAddress: Address): PayerRegistry {
-    const id = `payerRegistry-${payerRegistryAddress.toHexString()}`;
+export function getPayerRegistry(address: Address): PayerRegistry {
+    const id = `PayerRegistry-${address.toHexString()}`;
 
     let payerRegistry = PayerRegistry.load(id);
 
@@ -21,6 +21,7 @@ export function getPayerRegistry(payerRegistryAddress: Address): PayerRegistry {
     payerRegistry = new PayerRegistry(id);
 
     payerRegistry.lastUpdate = 0;
+    payerRegistry.address = address.toHexString();
     payerRegistry.paused = false;
     payerRegistry.totalDeposits = BigInt.fromI32(0);
     payerRegistry.totalDebt = BigInt.fromI32(0);
@@ -28,7 +29,6 @@ export function getPayerRegistry(payerRegistryAddress: Address): PayerRegistry {
     payerRegistry.minimumDeposit = BigInt.fromI32(0);
     payerRegistry.settler = ZERO_ADDRESS.toHexString();
     payerRegistry.feeDistributor = ZERO_ADDRESS.toHexString();
-    payerRegistry.feeTokenBalance = BigInt.fromI32(0);
     payerRegistry.totalWithdrawable = BigInt.fromI32(0);
     payerRegistry.excess = BigInt.fromI32(0);
     payerRegistry.totalBalances = BigInt.fromI32(0);
@@ -43,42 +43,33 @@ export function getPayerRegistry(payerRegistryAddress: Address): PayerRegistry {
     return payerRegistry;
 }
 
-/* ============ Payer Registry Snapshot Helpers ============ */
+export function getAccount(address: Address): Account {
+    const id = `Account-${address.toHexString()}`;
 
-export function updatePayerRegistryFeeTokenBalanceSnapshot(
-    payerRegistry: PayerRegistry,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
-    const id = `payerRegistryFeeTokenBalance-${timestamp.toString()}`;
+    let account = Account.load(id);
 
-    let snapshot = PayerRegistryFeeTokenBalanceSnapshot.load(id);
+    if (account) return account;
 
-    if (!snapshot) {
-        snapshot = new PayerRegistryFeeTokenBalanceSnapshot(id);
+    account = new Account(id);
 
-        snapshot.payerRegistry = payerRegistry.id;
-        snapshot.timestamp = timestamp;
-    }
+    account.lastUpdate = 0;
+    account.feeTokenBalance = BigInt.fromI32(0);
+    account.underlyingFeeTokenBalance = BigInt.fromI32(0);
+    account.gatewayWithdrawalsReceived = BigInt.fromI32(0);
 
-    snapshot.value = value;
-
-    snapshot.save();
+    return account;
 }
 
-export function updatePayerRegistryTotalWithdrawableSnapshot(
-    payerRegistry: PayerRegistry,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
-    const id = `payerRegistryTotalWithdrawable-${timestamp.toString()}`;
+/* ============ Payer Registry Snapshot Helpers ============ */
+
+export function updatePayerRegistryTotalWithdrawableSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `PayerRegistryTotalWithdrawableSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalWithdrawableSnapshot.load(id);
 
     if (!snapshot) {
         snapshot = new PayerRegistryTotalWithdrawableSnapshot(id);
 
-        snapshot.payerRegistry = payerRegistry.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -87,19 +78,14 @@ export function updatePayerRegistryTotalWithdrawableSnapshot(
     snapshot.save();
 }
 
-export function updatePayerRegistryExcessSnapshot(
-    payerRegistry: PayerRegistry,
-    timestamp: Timestamp,
-    value: BigInt
-): void {
-    const id = `payerRegistryExcess-${timestamp.toString()}`;
+export function updatePayerRegistryExcessSnapshot(timestamp: Timestamp, value: BigInt): void {
+    const id = `PayerRegistryExcessSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryExcessSnapshot.load(id);
 
     if (!snapshot) {
         snapshot = new PayerRegistryExcessSnapshot(id);
 
-        snapshot.payerRegistry = payerRegistry.id;
         snapshot.timestamp = timestamp;
     }
 
@@ -112,14 +98,14 @@ export function updatePayerRegistryExcessSnapshot(
 
 export function _updatePayerRegistryTotalWithdrawable(payerRegistry: PayerRegistry, timestamp: Timestamp): void {
     payerRegistry.totalWithdrawable = _getTotalWithdrawable(payerRegistry);
-    updatePayerRegistryTotalWithdrawableSnapshot(payerRegistry, timestamp, payerRegistry.totalWithdrawable);
+    updatePayerRegistryTotalWithdrawableSnapshot(timestamp, payerRegistry.totalWithdrawable);
 
     _updatePayerRegistryExcess(payerRegistry, timestamp);
 }
 
 export function _updatePayerRegistryExcess(payerRegistry: PayerRegistry, timestamp: Timestamp): void {
     payerRegistry.excess = _getExcess(payerRegistry);
-    updatePayerRegistryExcessSnapshot(payerRegistry, timestamp, payerRegistry.excess);
+    updatePayerRegistryExcessSnapshot(timestamp, payerRegistry.excess);
 }
 
 export function _getTotalWithdrawable(payerRegistry: PayerRegistry): BigInt {
@@ -127,7 +113,9 @@ export function _getTotalWithdrawable(payerRegistry: PayerRegistry): BigInt {
 }
 
 export function _getExcess(payerRegistry: PayerRegistry): BigInt {
-    return payerRegistry.feeTokenBalance.gt(payerRegistry.totalWithdrawable)
-        ? payerRegistry.feeTokenBalance.minus(payerRegistry.totalWithdrawable)
+    const payerRegistryFeeTokenBalance = getAccount(Address.fromString(payerRegistry.address)).feeTokenBalance;
+
+    return payerRegistryFeeTokenBalance.gt(payerRegistry.totalWithdrawable)
+        ? payerRegistryFeeTokenBalance.minus(payerRegistry.totalWithdrawable)
         : BigInt.fromI32(0);
 }

@@ -8,7 +8,7 @@
         "internalType": "address"
       },
       {
-        "name": "token_",
+        "name": "feeToken_",
         "type": "address",
         "internalType": "address"
       }
@@ -35,6 +35,62 @@
         "name": "amount_",
         "type": "uint96",
         "internalType": "uint96"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "depositFromUnderlying",
+    "inputs": [
+      {
+        "name": "payer_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount_",
+        "type": "uint96",
+        "internalType": "uint96"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "depositFromUnderlyingWithPermit",
+    "inputs": [
+      {
+        "name": "payer_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount_",
+        "type": "uint96",
+        "internalType": "uint96"
+      },
+      {
+        "name": "deadline_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "v_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "s_",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],
@@ -111,15 +167,41 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
   },
   {
     "type": "function",
+    "name": "feeToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "finalizeWithdrawal",
+    "inputs": [
+      {
+        "name": "recipient_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "finalizeWithdrawalIntoUnderlying",
     "inputs": [
       {
         "name": "recipient_",
@@ -226,8 +308,8 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
@@ -252,8 +334,8 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
@@ -291,8 +373,8 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
@@ -374,24 +456,11 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "token",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -487,8 +556,8 @@
     "outputs": [
       {
         "name": "key_",
-        "type": "bytes",
-        "internalType": "bytes"
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "pure"
@@ -799,11 +868,6 @@
   },
   {
     "type": "error",
-    "name": "TransferFailed",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "TransferFromFailed",
     "inputs": []
   },
@@ -830,6 +894,11 @@
   },
   {
     "type": "error",
+    "name": "ZeroFeeToken",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ZeroMigrator",
     "inputs": []
   },
@@ -845,12 +914,17 @@
   },
   {
     "type": "error",
-    "name": "ZeroSettler",
+    "name": "ZeroPayer",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "ZeroToken",
+    "name": "ZeroRecipient",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroSettler",
     "inputs": []
   },
   {

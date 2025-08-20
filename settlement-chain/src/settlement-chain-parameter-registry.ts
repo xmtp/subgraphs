@@ -1,9 +1,9 @@
 import { Address, Bytes, Timestamp } from '@graphprotocol/graph-ts';
 
-import { AppChainParameterRegistry, Parameter, ParameterValueSnapshot } from '../generated/schema';
+import { SettlementChainParameterRegistry, Parameter, ParameterValueSnapshot } from '../generated/schema';
 
-import { ParameterSet as ParameterSetEvent } from '../generated/AppChainParameterRegistry/AppChainParameterRegistry';
-import { ParameterSet as IndexedParameterSetEvent } from '../generated/AppChainParameterRegistry-v0.5.5/AppChainParameterRegistry_v0_5_5';
+import { ParameterSet as ParameterSetEvent } from '../generated/SettlementChainParameterRegistry/SettlementChainParameterRegistry';
+import { ParameterSet as IndexedParameterSetEvent } from '../generated/SettlementChainParameterRegistry-v0.5.5/SettlementChainParameterRegistry_v0_5_5';
 
 /* ============ Handlers ============ */
 
@@ -56,7 +56,7 @@ export function handleParameterSet(event: ParameterSetEvent): void {
 }
 
 function handleParameter(parameterRegistryAddress: Address, key: string, value: Bytes, timestamp: i32): void {
-    const registry = getAppChainParameterRegistry(parameterRegistryAddress);
+    const registry = getSettlementChainParameterRegistry(parameterRegistryAddress);
 
     registry.lastUpdate = timestamp;
     registry.save();
@@ -72,14 +72,14 @@ function handleParameter(parameterRegistryAddress: Address, key: string, value: 
 
 /* ============ Entity Helpers ============ */
 
-export function getAppChainParameterRegistry(address: Address): AppChainParameterRegistry {
-    const id = `AppChainParameterRegistry-${address.toHexString()}`;
+export function getSettlementChainParameterRegistry(address: Address): SettlementChainParameterRegistry {
+    const id = `SettlementChainParameterRegistry-${address.toHexString()}`;
 
-    let registry = AppChainParameterRegistry.load(id);
+    let registry = SettlementChainParameterRegistry.load(id);
 
     if (registry) return registry;
 
-    registry = new AppChainParameterRegistry(id);
+    registry = new SettlementChainParameterRegistry(id);
 
     registry.lastUpdate = 0;
     registry.address = address.toHexString();

@@ -24,7 +24,6 @@ export function getAccount(address: Address): Account {
     account.identityUpdateBytesCreated = BigInt.fromI32(0);
     account.identityUpdateFees = BigInt.fromI32(0);
     account.fees = BigInt.fromI32(0);
-    account.withdrawn = BigInt.fromI32(0);
     account.depositsReceived = BigInt.fromI32(0);
 
     return account;

@@ -5,22 +5,22 @@ import {
     Account,
     IdentityUpdate,
     IdentityUpdateBroadcaster,
+    IdentityUpdateBroadcasterPausedSnapshot,
+    IdentityUpdateBytesCreatedSnapshot,
+    IdentityUpdateFeesSnapshot,
+    IdentityUpdatePayloadBootstrapperSnapshot,
+    IdentityUpdatesCreatedSnapshot,
     MaxIdentityUpdatePayloadSizeSnapshot,
     MinIdentityUpdatePayloadSizeSnapshot,
-    IdentityUpdateBroadcasterPausedSnapshot,
-    IdentityUpdatePayloadBootstrapperSnapshot,
     TotalIdentityUpdateBytesCreatedSnapshot,
-    TotalIdentityUpdatesCreatedSnapshot,
     TotalIdentityUpdateFeesSnapshot,
-    IdentityUpdateBytesCreatedSnapshot,
-    IdentityUpdatesCreatedSnapshot,
-    IdentityUpdateFeesSnapshot,
+    TotalIdentityUpdatesCreatedSnapshot,
 } from '../generated/schema';
 
 import {
     IdentityUpdateCreated as IdentityUpdateCreatedEvent,
-    MinPayloadSizeUpdated as MinPayloadSizeUpdatedEvent,
     MaxPayloadSizeUpdated as MaxPayloadSizeUpdatedEvent,
+    MinPayloadSizeUpdated as MinPayloadSizeUpdatedEvent,
     PauseStatusUpdated as PauseStatusUpdatedEvent,
     PayloadBootstrapperUpdated as PayloadBootstrapperUpdatedEvent,
 } from '../generated/IdentityUpdateBroadcaster/IdentityUpdateBroadcaster';
@@ -129,8 +129,8 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
 
 /* ============ Entity Helpers ============ */
 
-export function getIdentityUpdateBroadcaster(identityUpdateBroadcasterAddress: Address): IdentityUpdateBroadcaster {
-    const id = `IdentityUpdateBroadcaster-${identityUpdateBroadcasterAddress.toHexString()}`;
+export function getIdentityUpdateBroadcaster(address: Address): IdentityUpdateBroadcaster {
+    const id = `IdentityUpdateBroadcaster-${address.toHexString()}`;
 
     let broadcaster = IdentityUpdateBroadcaster.load(id);
 
@@ -139,6 +139,7 @@ export function getIdentityUpdateBroadcaster(identityUpdateBroadcasterAddress: A
     broadcaster = new IdentityUpdateBroadcaster(id);
 
     broadcaster.lastUpdate = 0;
+    broadcaster.address = address.toHexString();
     broadcaster.minPayloadSize = BigInt.fromI32(0);
     broadcaster.maxPayloadSize = BigInt.fromI32(0);
     broadcaster.paused = false;

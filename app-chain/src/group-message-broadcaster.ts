@@ -5,22 +5,22 @@ import {
     Account,
     GroupMessage,
     GroupMessageBroadcaster,
+    GroupMessageBroadcasterPausedSnapshot,
+    GroupMessageBytesSentSnapshot,
+    GroupMessageFeesSnapshot,
+    GroupMessagePayloadBootstrapperSnapshot,
+    GroupMessagesSentSnapshot,
     MaxGroupMessagePayloadSizeSnapshot,
     MinGroupMessagePayloadSizeSnapshot,
-    GroupMessageBroadcasterPausedSnapshot,
-    GroupMessagePayloadBootstrapperSnapshot,
     TotalGroupMessageBytesSentSnapshot,
-    TotalGroupMessagesSentSnapshot,
     TotalGroupMessageFeesSnapshot,
-    GroupMessageBytesSentSnapshot,
-    GroupMessagesSentSnapshot,
-    GroupMessageFeesSnapshot,
+    TotalGroupMessagesSentSnapshot,
 } from '../generated/schema';
 
 import {
+    MaxPayloadSizeUpdated as MaxPayloadSizeUpdatedEvent,
     MessageSent as MessageSentEvent,
     MinPayloadSizeUpdated as MinPayloadSizeUpdatedEvent,
-    MaxPayloadSizeUpdated as MaxPayloadSizeUpdatedEvent,
     PauseStatusUpdated as PauseStatusUpdatedEvent,
     PayloadBootstrapperUpdated as PayloadBootstrapperUpdatedEvent,
 } from '../generated/GroupMessageBroadcaster/GroupMessageBroadcaster';
@@ -126,8 +126,8 @@ export function handlePayloadBootstrapperUpdated(event: PayloadBootstrapperUpdat
 
 /* ============ Entity Helpers ============ */
 
-export function getGroupMessageBroadcaster(groupMessageBroadcasterAddress: Address): GroupMessageBroadcaster {
-    const id = `GroupMessageBroadcaster-${groupMessageBroadcasterAddress.toHexString()}`;
+export function getGroupMessageBroadcaster(address: Address): GroupMessageBroadcaster {
+    const id = `GroupMessageBroadcaster-${address.toHexString()}`;
 
     let broadcaster = GroupMessageBroadcaster.load(id);
 
@@ -136,6 +136,7 @@ export function getGroupMessageBroadcaster(groupMessageBroadcasterAddress: Addre
     broadcaster = new GroupMessageBroadcaster(id);
 
     broadcaster.lastUpdate = 0;
+    broadcaster.address = address.toHexString();
     broadcaster.minPayloadSize = BigInt.fromI32(0);
     broadcaster.maxPayloadSize = BigInt.fromI32(0);
     broadcaster.paused = false;

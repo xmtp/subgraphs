@@ -5,14 +5,12 @@ import {
     Account,
     AppChainGateway,
     AppChainGatewayPausedSnapshot,
-    TotalDepositsReceivedSnapshot,
-    TotalWithdrawnSnapshot,
-    ReceivedDeposit,
     DepositsReceivedSnapshot,
     ParameterReceival,
-    ReceivedParameter,
+    ReceivedDeposit,
+    TotalDepositsReceivedSnapshot,
+    TotalWithdrawnSnapshot,
     Withdrawal,
-    WithdrawnSnapshot,
 } from '../generated/schema';
 
 import {
@@ -34,6 +32,7 @@ export function handleDepositReceived(event: DepositReceivedEvent): void {
     const gasPrice = event.transaction.gasPrice;
     const transactionFee = gasUsed.times(gasPrice);
     const transactionHash = event.transaction.hash.toHexString();
+    const logIndex = event.logIndex;
     const amount = event.params.amount;
 
     account.depositsReceived = account.depositsReceived.plus(amount);
@@ -48,7 +47,7 @@ export function handleDepositReceived(event: DepositReceivedEvent): void {
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const deposit = new ReceivedDeposit(`ReceivedDeposit-${transactionHash}`);
+    const deposit = new ReceivedDeposit(`ReceivedDeposit-${transactionHash}-${logIndex.toString()}`);
 
     deposit.recipient = account.id;
     deposit.amount = amount;
@@ -64,25 +63,17 @@ export function handleParametersReceived(event: ParametersReceivedEvent): void {
     const gateway = getAppChainGateway(event.address);
     const timestamp = event.block.timestamp.toI32();
     const transactionHash = event.transaction.hash.toHexString();
+    const logIndex = event.logIndex;
 
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const parameterReceival = new ParameterReceival(`ParameterReceival-${transactionHash}`);
+    const parameterReceival = new ParameterReceival(`ParameterReceival-${transactionHash}-${logIndex.toString()}`);
 
-    for (let i = 0; i < event.params.keys.length; i++) {
-        const key = event.params.keys[i];
-        const parameter = new ReceivedParameter(`ReceivedParameter-${transactionHash}-${i}`);
-
-        parameter.key = key;
-        parameter.event = parameterReceival.id;
-
-        parameter.save();
-    }
-
+    parameterReceival.keys = event.params.keys;
     parameterReceival.timestamp = timestamp;
-    parameterReceival.transactionHash = event.transaction.hash.toHexString();
-    parameterReceival.logIndex = event.logIndex;
+    parameterReceival.transactionHash = transactionHash;
+    parameterReceival.logIndex = logIndex;
 
     parameterReceival.save();
 }
@@ -100,19 +91,13 @@ export function handlePauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
 
 export function handleWithdrawal(event: WithdrawalEvent): void {
     const gateway = getAppChainGateway(event.address);
-    const account = getAccount(event.params.account);
     const timestamp = event.block.timestamp.toI32();
     const gasUsed = event.receipt === null ? BigInt.fromI32(0) : (event.receipt as ethereum.TransactionReceipt).gasUsed;
     const gasPrice = event.transaction.gasPrice;
     const transactionFee = gasUsed.times(gasPrice);
     const transactionHash = event.transaction.hash.toHexString();
+    const logIndex = event.logIndex;
     const amount = event.params.amount;
-
-    account.withdrawn = account.withdrawn.plus(amount);
-    updateAccountWithdrawnSnapshot(account, timestamp, account.withdrawn);
-
-    account.lastUpdate = timestamp;
-    account.save();
 
     gateway.totalWithdrawn = gateway.totalWithdrawn.plus(amount);
     updateTotalWithdrawnSnapshot(timestamp, gateway.totalWithdrawn);
@@ -120,14 +105,13 @@ export function handleWithdrawal(event: WithdrawalEvent): void {
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const withdrawal = new Withdrawal(`Withdrawal-${transactionHash}`);
+    const withdrawal = new Withdrawal(`Withdrawal-${transactionHash}-${logIndex.toString()}`);
 
-    withdrawal.account = account.id;
     withdrawal.recipient = event.params.recipient.toHexString();
     withdrawal.amount = amount;
     withdrawal.timestamp = timestamp;
     withdrawal.transactionHash = transactionHash;
-    withdrawal.logIndex = event.logIndex;
+    withdrawal.logIndex = logIndex;
     withdrawal.fee = transactionFee;
 
     withdrawal.save();
@@ -145,6 +129,7 @@ function getAppChainGateway(address: Address): AppChainGateway {
     gateway = new AppChainGateway(id);
 
     gateway.lastUpdate = 0;
+    gateway.address = address.toHexString();
     gateway.paused = false;
     gateway.totalWithdrawn = BigInt.fromI32(0);
     gateway.totalDepositsReceived = BigInt.fromI32(0);
@@ -211,23 +196,6 @@ function updateAccountDepositsReceivedSnapshot(account: Account, timestamp: Time
 
     if (!snapshot) {
         snapshot = new DepositsReceivedSnapshot(id);
-
-        snapshot.account = account.id;
-        snapshot.timestamp = timestamp;
-    }
-
-    snapshot.value = value;
-
-    snapshot.save();
-}
-
-function updateAccountWithdrawnSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
-    const id = `WithdrawnSnapshot-${account.address}-${timestamp.toString()}`;
-
-    let snapshot = WithdrawnSnapshot.load(id);
-
-    if (!snapshot) {
-        snapshot = new WithdrawnSnapshot(id);
 
         snapshot.account = account.id;
         snapshot.timestamp = timestamp;

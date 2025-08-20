@@ -6,11 +6,6 @@
         "name": "parameterRegistry_",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "underlying_",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -18,19 +13,6 @@
   {
     "type": "function",
     "name": "DOMAIN_SEPARATOR",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "domainSeparator_",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "PERMIT_TYPEHASH",
     "inputs": [],
     "outputs": [
       {
@@ -119,121 +101,7 @@
         "internalType": "uint8"
       }
     ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "deposit",
-    "inputs": [
-      {
-        "name": "amount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "depositFor",
-    "inputs": [
-      {
-        "name": "recipient_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "amount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "success_",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "depositForWithPermit",
-    "inputs": [
-      {
-        "name": "recipient_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "amount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "deadline_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "v_",
-        "type": "uint8",
-        "internalType": "uint8"
-      },
-      {
-        "name": "r_",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "s_",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "success_",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "depositWithPermit",
-    "inputs": [
-      {
-        "name": "amount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "deadline_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "v_",
-        "type": "uint8",
-        "internalType": "uint8"
-      },
-      {
-        "name": "r_",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "s_",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -280,45 +148,6 @@
   },
   {
     "type": "function",
-    "name": "getPermitDigest",
-    "inputs": [
-      {
-        "name": "owner_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "spender_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "value_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "nonce_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "deadline_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "digest_",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "implementation",
     "inputs": [],
     "outputs": [
@@ -359,6 +188,24 @@
   },
   {
     "type": "function",
+    "name": "mint",
+    "inputs": [
+      {
+        "name": "to_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "name",
     "inputs": [],
     "outputs": [
@@ -375,14 +222,14 @@
     "name": "nonces",
     "inputs": [
       {
-        "name": "owner_",
+        "name": "owner",
         "type": "address",
         "internalType": "address"
       }
     ],
     "outputs": [
       {
-        "name": "nonce_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -407,37 +254,37 @@
     "name": "permit",
     "inputs": [
       {
-        "name": "owner_",
+        "name": "owner",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "spender_",
+        "name": "spender",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "value_",
+        "name": "value",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "deadline_",
+        "name": "deadline",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "v_",
+        "name": "v",
         "type": "uint8",
         "internalType": "uint8"
       },
       {
-        "name": "r_",
+        "name": "r",
         "type": "bytes32",
         "internalType": "bytes32"
       },
       {
-        "name": "s_",
+        "name": "s",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -518,56 +365,6 @@
     "outputs": [
       {
         "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "underlying",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "withdraw",
-    "inputs": [
-      {
-        "name": "amount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "withdrawTo",
-    "inputs": [
-      {
-        "name": "recipient_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "amount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "success_",
         "type": "bool",
         "internalType": "bool"
       }
@@ -869,37 +666,7 @@
   },
   {
     "type": "error",
-    "name": "TransferFailed",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "TransferFromFailed",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ZeroAmount",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "ZeroMigrator",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ZeroParameterRegistry",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ZeroRecipient",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ZeroUnderlying",
     "inputs": []
   }
 ]
