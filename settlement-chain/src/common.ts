@@ -1,4 +1,4 @@
-import { Address, BigInt, Timestamp } from '@graphprotocol/graph-ts';
+import { Address, BigInt, Timestamp, dataSource } from '@graphprotocol/graph-ts';
 
 import {
     Account,
@@ -8,6 +8,7 @@ import {
 } from '../generated/schema';
 
 const ZERO_ADDRESS = Address.fromString('0x0000000000000000000000000000000000000000');
+const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
 
 /* ============ Entity Helpers ============ */
 
@@ -22,6 +23,7 @@ export function getPayerRegistry(address: Address): PayerRegistry {
 
     payerRegistry.lastUpdate = 0;
     payerRegistry.address = address.toHexString();
+    payerRegistry.implementation = STARTING_IMPLEMENTATION;
     payerRegistry.paused = false;
     payerRegistry.totalDeposits = BigInt.fromI32(0);
     payerRegistry.totalDebt = BigInt.fromI32(0);
@@ -53,9 +55,14 @@ export function getAccount(address: Address): Account {
     account = new Account(id);
 
     account.lastUpdate = 0;
+    account.address = address.toHexString();
     account.feeTokenBalance = BigInt.fromI32(0);
     account.underlyingFeeTokenBalance = BigInt.fromI32(0);
     account.gatewayWithdrawalsReceived = BigInt.fromI32(0);
+    account.feeTokenReceived = BigInt.fromI32(0);
+    account.feeTokenSent = BigInt.fromI32(0);
+    account.feeTokenMinted = BigInt.fromI32(0);
+    account.feeTokenBurned = BigInt.fromI32(0);
 
     return account;
 }

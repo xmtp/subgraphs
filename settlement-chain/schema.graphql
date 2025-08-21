@@ -53,22 +53,6 @@ type PayerRegistryBalanceSnapshot implements PayerSnapshotEntity & BigIntSnapsho
     value: BigInt!
 }
 
-type PayerRegistryPendingWithdrawalSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
-    @entity(immutable: false) {
-    id: ID! @unique
-    timestamp: Timestamp! @unique @index
-    payer: Payer! @index
-    value: BigInt!
-}
-
-type PayerRegistryWithdrawableTimestampSnapshot implements PayerSnapshotEntity & TimestampSnapshotEntity & SnapshotEntity
-    @entity(immutable: false) {
-    id: ID! @unique
-    timestamp: Timestamp! @unique @index
-    payer: Payer! @index
-    value: Timestamp!
-}
-
 # ============ Payer - Lifetime Total Snapshots ============ #
 
 type PayerRegistryDepositedSnapshot implements PayerSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
@@ -126,6 +110,7 @@ type PayerRegistryWithdrawal @entity(immutable: false) {
     id: ID! @unique
     payer: Payer! @index
     amount: BigInt!
+    withdrawableTimestamp: Timestamp!
     requestTimestamp: Timestamp!
     requestTransactionHash: String!
     requestLogIndex: BigInt!
@@ -156,10 +141,7 @@ type Payer @entity(immutable: false) {
     # State Variables (and snapshots)
     balance: BigInt!
     balanceSnapshots: [PayerRegistryBalanceSnapshot!] @derivedFrom(field: "payer")
-    pendingWithdrawal: BigInt!
-    pendingWithdrawalSnapshots: [PayerRegistryPendingWithdrawalSnapshot!] @derivedFrom(field: "payer")
-    withdrawableTimestamp: Timestamp!
-    withdrawableTimestampSnapshots: [PayerRegistryWithdrawableTimestampSnapshot!] @derivedFrom(field: "payer")
+    pendingWithdrawal: PayerRegistryWithdrawal
 
     # Lifetime Totals (and snapshots)
     deposited: BigInt!
@@ -187,6 +169,13 @@ interface PayerRegistrySnapshotEntity implements SnapshotEntity {
 }
 
 # ============ PayerRegistry - State Variable Snapshots ============ #
+
+type PayerRegistryImplementationSnapshot implements PayerRegistrySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
 
 type PayerRegistryPausedSnapshot implements PayerRegistrySnapshotEntity & BooleanSnapshotEntity & SnapshotEntity
     @entity(immutable: false) {
@@ -340,6 +329,7 @@ type PayerRegistry @entity(immutable: false) {
     address: String! @unique
 
     # State Variables (and snapshots)
+    implementation: String!
     paused: Boolean!
     totalDeposits: BigInt!
     totalDebt: BigInt!
@@ -495,6 +485,13 @@ interface GatewaySnapshotEntity implements SnapshotEntity {
 
 # ============ SettlementChainGateway - State Variable Snapshots ============ #
 
+type GatewayImplementationSnapshot implements GatewaySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
 type GatewayPausedSnapshot implements GatewaySnapshotEntity & BooleanSnapshotEntity & SnapshotEntity
     @entity(immutable: false) {
     id: ID! @unique
@@ -551,6 +548,8 @@ type GatewayInbox @entity(immutable: false) {
 type ParameterSend @entity(immutable: true) {
     id: ID! @unique
     keys: [String!]!
+    chainId: BigInt! @index
+    messageNumber: BigInt! @index
     timestamp: Timestamp!
     transactionHash: String!
     logIndex: BigInt!
@@ -576,6 +575,7 @@ type SettlementChainGateway @entity(immutable: false) {
     address: String! @unique
 
     # State Variable Mappings
+    implementation: String!
     paused: Boolean!
 
     # Lifetime Totals (and snapshots)
@@ -611,6 +611,22 @@ type Parameter @entity(immutable: false) {
     valueSnapshot: ParameterValueSnapshot! @derivedFrom(field: "parameter")
 }
 
+# ============ SettlementChainParameterRegistry - Snapshot Interfaces ============ #
+
+interface ParameterRegistrySnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+}
+
+# ============ SettlementChainParameterRegistry - State Variable Snapshots ============ #
+
+type ParameterRegistryImplementationSnapshot implements ParameterRegistrySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
 # ============ SettlementChainParameterRegistry - Entity ============ #
 
 type SettlementChainParameterRegistry @entity(immutable: false) {
@@ -618,6 +634,9 @@ type SettlementChainParameterRegistry @entity(immutable: false) {
     id: ID! @unique
     lastUpdate: Timestamp!
     address: String! @unique
+
+    # State Variable Mappings
+    implementation: String!
 }
 
 # ============ FeeToken - Snapshot Interfaces ============ #
@@ -628,6 +647,13 @@ interface FeeTokenSnapshotEntity implements SnapshotEntity {
 }
 
 # ============ FeeToken - State Variable Snapshots ============ #
+
+type FeeTokenImplementationSnapshot implements FeeTokenSnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
 
 type FeeTokenTotalSupplySnapshot implements FeeTokenSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
     @entity(immutable: false) {
@@ -677,6 +703,7 @@ type FeeToken @entity(immutable: false) {
     address: String! @unique
 
     # State Variables (and snapshots)
+    implementation: String!
     totalSupply: BigInt!
 
     # Aggregators (and snapshots)

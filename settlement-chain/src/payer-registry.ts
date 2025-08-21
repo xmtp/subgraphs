@@ -1,4 +1,4 @@
-import { Address, BigInt, Timestamp } from '@graphprotocol/graph-ts';
+import { Address, BigInt } from '@graphprotocol/graph-ts';
 
 import {
     Payer,
@@ -9,10 +9,10 @@ import {
     PayerRegistryDepositedSnapshot,
     PayerRegistryExcessTransfer,
     PayerRegistryFeeDistributorSnapshot,
+    PayerRegistryImplementationSnapshot,
     PayerRegistryIncurredDebtSnapshot,
     PayerRegistryMinimumDepositSnapshot,
     PayerRegistryPausedSnapshot,
-    PayerRegistryPendingWithdrawalSnapshot,
     PayerRegistryRepaidDebtSnapshot,
     PayerRegistrySettlerSnapshot,
     PayerRegistryTotalBalanceSnapshot,
@@ -27,7 +27,6 @@ import {
     PayerRegistryTotalWithdrawnSnapshot,
     PayerRegistryUsageSettledSnapshot,
     PayerRegistryUsageSettlement,
-    PayerRegistryWithdrawableTimestampSnapshot,
     PayerRegistryWithdrawal,
     PayerRegistryWithdrawLockPeriodSnapshot,
     PayerRegistryWithdrawnSnapshot,
@@ -45,6 +44,7 @@ import {
     WithdrawalFinalized as WithdrawalFinalizedEvent,
     WithdrawalRequested as WithdrawalRequestedEvent,
     WithdrawLockPeriodUpdated as WithdrawLockPeriodUpdatedEvent,
+    Upgraded as UpgradedEvent,
 } from '../generated/PayerRegistry/PayerRegistry';
 
 import { getPayerRegistry, _updatePayerRegistryTotalWithdrawable } from './common';
@@ -167,7 +167,7 @@ export function handleUsageSettled(event: UsageSettledEvent): void {
     batchUsageSettlement.save();
 
     const usageSettlement = new PayerRegistryUsageSettlement(
-        `UsageSettlement-${transactionHash}-${logIndex.toString()}`
+        `PayerRegistryUsageSettlement-${transactionHash}-${logIndex.toString()}`
     );
 
     usageSettlement.payer = payer.id;
@@ -196,15 +196,19 @@ export function handleWithdrawalCancelled(event: WithdrawalCancelledEvent): void
     const transactionHash = event.transaction.hash.toHexString();
     const logIndex = event.logIndex;
 
-    _cancelWithdrawal(payerRegistry, payer, timestamp);
+    const withdrawalId = payer.pendingWithdrawal ? payer.pendingWithdrawal : '__DNE__';
+    const withdrawal = PayerRegistryWithdrawal.load(withdrawalId as string);
+
+    if (!withdrawal) throw new Error('No pending withdrawal');
+
+    _cancelWithdrawal(payerRegistry, payer, withdrawal, timestamp);
 
     payerRegistry.lastUpdate = timestamp;
     payerRegistry.save();
 
+    payer.pendingWithdrawal = null;
     payer.lastUpdate = timestamp;
     payer.save();
-
-    const withdrawal = getPayerRegistryWithdrawal(transactionHash, logIndex); // TODO: This will not work.
 
     withdrawal.cancelTimestamp = timestamp;
     withdrawal.cancelTransactionHash = transactionHash;
@@ -220,15 +224,18 @@ export function handleWithdrawalFinalized(event: WithdrawalFinalizedEvent): void
     const transactionHash = event.transaction.hash.toHexString();
     const logIndex = event.logIndex;
 
-    _finalizeWithdrawal(payerRegistry, payer, timestamp);
+    const withdrawalId = payer.pendingWithdrawal ? payer.pendingWithdrawal : '__DNE__';
+    const withdrawal = PayerRegistryWithdrawal.load(withdrawalId as string);
+
+    if (!withdrawal) throw new Error('No pending withdrawal');
+
+    _finalizeWithdrawal(payerRegistry, payer, withdrawal, timestamp);
 
     payerRegistry.lastUpdate = timestamp;
     payerRegistry.save();
 
     payer.lastUpdate = timestamp;
     payer.save();
-
-    const withdrawal = getPayerRegistryWithdrawal(transactionHash, logIndex); // TODO: This will not work.
 
     withdrawal.finalizeTimestamp = timestamp;
     withdrawal.finalizeTransactionHash = transactionHash;
@@ -246,23 +253,37 @@ export function handleWithdrawalRequested(event: WithdrawalRequestedEvent): void
     const transactionHash = event.transaction.hash.toHexString();
     const logIndex = event.logIndex;
 
-    _requestWithdrawal(payerRegistry, payer, amount, withdrawableTimestamp, timestamp);
+    _requestWithdrawal(payerRegistry, payer, amount, timestamp);
 
     payerRegistry.lastUpdate = timestamp;
     payerRegistry.save();
-
-    payer.lastUpdate = timestamp;
-    payer.save();
 
     const withdrawal = getPayerRegistryWithdrawal(transactionHash, logIndex);
 
     withdrawal.payer = payer.id;
     withdrawal.amount = amount;
+    withdrawal.withdrawableTimestamp = withdrawableTimestamp;
     withdrawal.requestTimestamp = timestamp;
     withdrawal.requestTransactionHash = transactionHash;
     withdrawal.requestLogIndex = logIndex;
 
     withdrawal.save();
+
+    payer.pendingWithdrawal = withdrawal.id;
+    payer.lastUpdate = timestamp;
+
+    payer.save();
+}
+
+export function handleUpgraded(event: UpgradedEvent): void {
+    const payerRegistry = getPayerRegistry(event.address);
+    const timestamp = event.block.timestamp.toI32();
+
+    payerRegistry.implementation = event.params.implementation.toHexString();
+    updatePayerRegistryImplementationSnapshot(timestamp, payerRegistry.implementation);
+
+    payerRegistry.lastUpdate = timestamp;
+    payerRegistry.save();
 }
 
 /* ============ Entity Helpers ============ */
@@ -279,8 +300,7 @@ function getPayer(address: Address): Payer {
     payer.lastUpdate = 0;
     payer.address = address.toHexString();
     payer.balance = BigInt.fromI32(0);
-    payer.pendingWithdrawal = BigInt.fromI32(0);
-    payer.withdrawableTimestamp = 0;
+    payer.pendingWithdrawal = null;
     payer.deposited = BigInt.fromI32(0);
     payer.incurredDebt = BigInt.fromI32(0);
     payer.repaidDebt = BigInt.fromI32(0);
@@ -292,7 +312,7 @@ function getPayer(address: Address): Payer {
 
 function getPayerRegistryBatchUsageSettlement(
     transactionHash: string,
-    timestamp: Timestamp
+    timestamp: i32
 ): PayerRegistryBatchUsageSettlement {
     const id = `PayerRegistryBatchUsageSettlement-${transactionHash}`;
 
@@ -320,6 +340,7 @@ function getPayerRegistryWithdrawal(transactionHash: string, logIndex: BigInt): 
 
     withdrawal.payer = '';
     withdrawal.amount = BigInt.fromI32(0);
+    withdrawal.withdrawableTimestamp = 0;
     withdrawal.requestTimestamp = 0;
     withdrawal.requestTransactionHash = '';
     withdrawal.requestLogIndex = BigInt.fromI32(0);
@@ -335,7 +356,7 @@ function getPayerRegistryWithdrawal(transactionHash: string, logIndex: BigInt): 
 
 /* ============ Payer Snapshot Helpers ============ */
 
-function updatePayerRegistryBalanceSnapshot(payer: Payer, timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryBalanceSnapshot(payer: Payer, timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryBalanceSnapshot-${payer.address}-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryBalanceSnapshot.load(id);
@@ -352,7 +373,7 @@ function updatePayerRegistryBalanceSnapshot(payer: Payer, timestamp: Timestamp, 
     snapshot.save();
 }
 
-function updatePayerRegistryDepositedSnapshot(payer: Payer, timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryDepositedSnapshot(payer: Payer, timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryDepositedSnapshot-${payer.address}-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryDepositedSnapshot.load(id);
@@ -369,7 +390,7 @@ function updatePayerRegistryDepositedSnapshot(payer: Payer, timestamp: Timestamp
     snapshot.save();
 }
 
-function updatePayerRegistryIncurredDebtSnapshot(payer: Payer, timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryIncurredDebtSnapshot(payer: Payer, timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryIncurredDebtSnapshot-${payer.address}-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryIncurredDebtSnapshot.load(id);
@@ -386,7 +407,7 @@ function updatePayerRegistryIncurredDebtSnapshot(payer: Payer, timestamp: Timest
     snapshot.save();
 }
 
-function updatePayerRegistryRepaidDebtSnapshot(payer: Payer, timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryRepaidDebtSnapshot(payer: Payer, timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryRepaidDebtSnapshot-${payer.address}-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryRepaidDebtSnapshot.load(id);
@@ -403,7 +424,7 @@ function updatePayerRegistryRepaidDebtSnapshot(payer: Payer, timestamp: Timestam
     snapshot.save();
 }
 
-function updatePayerRegistryUsageSettledSnapshot(payer: Payer, timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryUsageSettledSnapshot(payer: Payer, timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryUsageSettledSnapshot-${payer.address}-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryUsageSettledSnapshot.load(id);
@@ -420,41 +441,7 @@ function updatePayerRegistryUsageSettledSnapshot(payer: Payer, timestamp: Timest
     snapshot.save();
 }
 
-function updatePayerRegistryPendingWithdrawalSnapshot(payer: Payer, timestamp: Timestamp, value: BigInt): void {
-    const id = `PayerRegistryPendingWithdrawalSnapshot-${payer.address}-${timestamp.toString()}`;
-
-    let snapshot = PayerRegistryPendingWithdrawalSnapshot.load(id);
-
-    if (!snapshot) {
-        snapshot = new PayerRegistryPendingWithdrawalSnapshot(id);
-
-        snapshot.payer = payer.id;
-        snapshot.timestamp = timestamp;
-    }
-
-    snapshot.value = value;
-
-    snapshot.save();
-}
-
-function updatePayerRegistryWithdrawableTimestampSnapshot(payer: Payer, timestamp: Timestamp, value: Timestamp): void {
-    const id = `PayerRegistryWithdrawableTimestampSnapshot-${payer.address}-${timestamp.toString()}`;
-
-    let snapshot = PayerRegistryWithdrawableTimestampSnapshot.load(id);
-
-    if (!snapshot) {
-        snapshot = new PayerRegistryWithdrawableTimestampSnapshot(id);
-
-        snapshot.payer = payer.id;
-        snapshot.timestamp = timestamp;
-    }
-
-    snapshot.value = value;
-
-    snapshot.save();
-}
-
-function updatePayerRegistryWithdrawnSnapshot(payer: Payer, timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryWithdrawnSnapshot(payer: Payer, timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryWithdrawnSnapshot-${payer.address}-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryWithdrawnSnapshot.load(id);
@@ -473,7 +460,7 @@ function updatePayerRegistryWithdrawnSnapshot(payer: Payer, timestamp: Timestamp
 
 /* ============ Payer Registry Snapshot Helpers ============ */
 
-function updatePayerRegistryTotalIncurredDebtSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalIncurredDebtSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalIncurredDebtSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalIncurredDebtSnapshot.load(id);
@@ -489,7 +476,7 @@ function updatePayerRegistryTotalIncurredDebtSnapshot(timestamp: Timestamp, valu
     snapshot.save();
 }
 
-function updatePayerRegistryTotalRepaidDebtSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalRepaidDebtSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalRepaidDebtSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalRepaidDebtSnapshot.load(id);
@@ -505,7 +492,7 @@ function updatePayerRegistryTotalRepaidDebtSnapshot(timestamp: Timestamp, value:
     snapshot.save();
 }
 
-function updatePayerRegistryTotalDebtSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalDebtSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalDebtSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalDebtSnapshot.load(id);
@@ -521,7 +508,7 @@ function updatePayerRegistryTotalDebtSnapshot(timestamp: Timestamp, value: BigIn
     snapshot.save();
 }
 
-function updatePayerRegistryTotalDepositsSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalDepositsSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalDepositsSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalDepositsSnapshot.load(id);
@@ -537,7 +524,7 @@ function updatePayerRegistryTotalDepositsSnapshot(timestamp: Timestamp, value: B
     snapshot.save();
 }
 
-function updatePayerRegistryTotalBalanceSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalBalanceSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalBalanceSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalBalanceSnapshot.load(id);
@@ -553,7 +540,7 @@ function updatePayerRegistryTotalBalanceSnapshot(timestamp: Timestamp, value: Bi
     snapshot.save();
 }
 
-function updatePayerRegistryTotalDepositedSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalDepositedSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalDepositedSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalDepositedSnapshot.load(id);
@@ -569,7 +556,7 @@ function updatePayerRegistryTotalDepositedSnapshot(timestamp: Timestamp, value: 
     snapshot.save();
 }
 
-function updatePayerRegistryTotalExcessTransferredSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalExcessTransferredSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalExcessTransferredSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalExcessTransferredSnapshot.load(id);
@@ -585,7 +572,7 @@ function updatePayerRegistryTotalExcessTransferredSnapshot(timestamp: Timestamp,
     snapshot.save();
 }
 
-function updatePayerRegistryFeeDistributorSnapshot(timestamp: Timestamp, value: string): void {
+function updatePayerRegistryFeeDistributorSnapshot(timestamp: i32, value: string): void {
     const id = `PayerRegistryFeeDistributorSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryFeeDistributorSnapshot.load(id);
@@ -601,7 +588,7 @@ function updatePayerRegistryFeeDistributorSnapshot(timestamp: Timestamp, value: 
     snapshot.save();
 }
 
-function updatePayerRegistryMinimumDepositSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryMinimumDepositSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryMinimumDepositSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryMinimumDepositSnapshot.load(id);
@@ -617,7 +604,7 @@ function updatePayerRegistryMinimumDepositSnapshot(timestamp: Timestamp, value: 
     snapshot.save();
 }
 
-function updatePayerRegistryPausedSnapshot(timestamp: Timestamp, value: boolean): void {
+function updatePayerRegistryPausedSnapshot(timestamp: i32, value: boolean): void {
     const id = `PayerRegistryPausedSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryPausedSnapshot.load(id);
@@ -633,7 +620,7 @@ function updatePayerRegistryPausedSnapshot(timestamp: Timestamp, value: boolean)
     snapshot.save();
 }
 
-function updatePayerRegistrySettlerSnapshot(timestamp: Timestamp, value: string): void {
+function updatePayerRegistrySettlerSnapshot(timestamp: i32, value: string): void {
     const id = `PayerRegistrySettlerSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistrySettlerSnapshot.load(id);
@@ -649,7 +636,7 @@ function updatePayerRegistrySettlerSnapshot(timestamp: Timestamp, value: string)
     snapshot.save();
 }
 
-function updatePayerRegistryTotalUsageSettledSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalUsageSettledSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalUsageSettledSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalUsageSettledSnapshot.load(id);
@@ -665,7 +652,7 @@ function updatePayerRegistryTotalUsageSettledSnapshot(timestamp: Timestamp, valu
     snapshot.save();
 }
 
-function updatePayerRegistryWithdrawLockPeriodSnapshot(timestamp: Timestamp, value: i32): void {
+function updatePayerRegistryWithdrawLockPeriodSnapshot(timestamp: i32, value: i32): void {
     const id = `PayerRegistryWithdrawLockPeriodSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryWithdrawLockPeriodSnapshot.load(id);
@@ -681,7 +668,7 @@ function updatePayerRegistryWithdrawLockPeriodSnapshot(timestamp: Timestamp, val
     snapshot.save();
 }
 
-function updatePayerRegistryTotalPendingWithdrawalsSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalPendingWithdrawalsSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalPendingWithdrawalsSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalPendingWithdrawalsSnapshot.load(id);
@@ -697,7 +684,7 @@ function updatePayerRegistryTotalPendingWithdrawalsSnapshot(timestamp: Timestamp
     snapshot.save();
 }
 
-function updatePayerRegistryTotalWithdrawnSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updatePayerRegistryTotalWithdrawnSnapshot(timestamp: i32, value: BigInt): void {
     const id = `PayerRegistryTotalWithdrawnSnapshot-${timestamp.toString()}`;
 
     let snapshot = PayerRegistryTotalWithdrawnSnapshot.load(id);
@@ -713,9 +700,25 @@ function updatePayerRegistryTotalWithdrawnSnapshot(timestamp: Timestamp, value: 
     snapshot.save();
 }
 
+function updatePayerRegistryImplementationSnapshot(timestamp: i32, value: string): void {
+    const id = `PayerRegistryImplementationSnapshot-${timestamp.toString()}`;
+
+    let snapshot = PayerRegistryImplementationSnapshot.load(id);
+
+    if (!snapshot) {
+        snapshot = new PayerRegistryImplementationSnapshot(id);
+
+        snapshot.timestamp = timestamp;
+    }
+
+    snapshot.value = value;
+
+    snapshot.save();
+}
+
 /* ============ Contract Stateful Tracking ============ */
 
-function _deposit(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: Timestamp): void {
+function _deposit(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: i32): void {
     if (amount.equals(BigInt.fromI32(0))) return;
 
     const debtRepaid = _increaseBalance(payerRegistry, payer, amount, timestamp);
@@ -741,12 +744,12 @@ function _deposit(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, ti
     _updatePayerRegistryTotalWithdrawable(payerRegistry, timestamp);
 }
 
-function _transferExcess(payerRegistry: PayerRegistry, amount: BigInt, timestamp: Timestamp): void {
+function _transferExcess(payerRegistry: PayerRegistry, amount: BigInt, timestamp: i32): void {
     payerRegistry.totalExcessTransferred = payerRegistry.totalExcessTransferred.plus(amount);
     updatePayerRegistryTotalExcessTransferredSnapshot(timestamp, payerRegistry.totalExcessTransferred);
 }
 
-function _settleUsage(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: Timestamp): void {
+function _settleUsage(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: i32): void {
     const debtIncurred = _decreaseBalance(payerRegistry, payer, amount, timestamp);
 
     payer.incurredDebt = payer.incurredDebt.plus(debtIncurred);
@@ -770,8 +773,13 @@ function _settleUsage(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt
     _updatePayerRegistryTotalWithdrawable(payerRegistry, timestamp);
 }
 
-function _cancelWithdrawal(payerRegistry: PayerRegistry, payer: Payer, timestamp: Timestamp): void {
-    const debtRepaid = _increaseBalance(payerRegistry, payer, payer.pendingWithdrawal, timestamp);
+function _cancelWithdrawal(
+    payerRegistry: PayerRegistry,
+    payer: Payer,
+    pendingWithdrawal: PayerRegistryWithdrawal,
+    timestamp: i32
+): void {
+    const debtRepaid = _increaseBalance(payerRegistry, payer, pendingWithdrawal.amount, timestamp);
 
     payer.repaidDebt = payer.repaidDebt.plus(debtRepaid);
     updatePayerRegistryRepaidDebtSnapshot(payer, timestamp, payer.repaidDebt);
@@ -782,60 +790,41 @@ function _cancelWithdrawal(payerRegistry: PayerRegistry, payer: Payer, timestamp
     payerRegistry.totalDebt = payerRegistry.totalDebt.minus(debtRepaid);
     updatePayerRegistryTotalDebtSnapshot(timestamp, payerRegistry.totalDebt);
 
-    payer.pendingWithdrawal = BigInt.fromI32(0);
-    updatePayerRegistryPendingWithdrawalSnapshot(payer, timestamp, payer.pendingWithdrawal);
-
-    payerRegistry.totalPendingWithdrawals = payerRegistry.totalPendingWithdrawals.minus(payer.pendingWithdrawal);
+    payerRegistry.totalPendingWithdrawals = payerRegistry.totalPendingWithdrawals.minus(pendingWithdrawal.amount);
     updatePayerRegistryTotalPendingWithdrawalsSnapshot(timestamp, payerRegistry.totalPendingWithdrawals);
-
-    payer.withdrawableTimestamp = 0;
-    updatePayerRegistryWithdrawableTimestampSnapshot(payer, timestamp, payer.withdrawableTimestamp);
 
     _updatePayerRegistryTotalWithdrawable(payerRegistry, timestamp);
 }
 
-function _finalizeWithdrawal(payerRegistry: PayerRegistry, payer: Payer, timestamp: Timestamp): void {
-    payer.pendingWithdrawal = BigInt.fromI32(0);
-    updatePayerRegistryPendingWithdrawalSnapshot(payer, timestamp, payer.pendingWithdrawal);
-
-    payerRegistry.totalPendingWithdrawals = payerRegistry.totalPendingWithdrawals.minus(payer.pendingWithdrawal);
+function _finalizeWithdrawal(
+    payerRegistry: PayerRegistry,
+    payer: Payer,
+    pendingWithdrawal: PayerRegistryWithdrawal,
+    timestamp: i32
+): void {
+    payerRegistry.totalPendingWithdrawals = payerRegistry.totalPendingWithdrawals.minus(pendingWithdrawal.amount);
     updatePayerRegistryTotalPendingWithdrawalsSnapshot(timestamp, payerRegistry.totalPendingWithdrawals);
 
-    payer.withdrawableTimestamp = 0;
-    updatePayerRegistryWithdrawableTimestampSnapshot(payer, timestamp, payer.withdrawableTimestamp);
-
-    payerRegistry.totalDeposits = payerRegistry.totalDeposits.minus(payer.pendingWithdrawal);
+    payerRegistry.totalDeposits = payerRegistry.totalDeposits.minus(pendingWithdrawal.amount);
     updatePayerRegistryTotalDepositsSnapshot(timestamp, payerRegistry.totalDeposits);
 
-    payer.withdrawn = payer.withdrawn.plus(payer.pendingWithdrawal);
+    payer.withdrawn = payer.withdrawn.plus(pendingWithdrawal.amount);
     updatePayerRegistryWithdrawnSnapshot(payer, timestamp, payer.withdrawn);
 
-    payerRegistry.totalWithdrawn = payerRegistry.totalWithdrawn.plus(payer.pendingWithdrawal);
+    payerRegistry.totalWithdrawn = payerRegistry.totalWithdrawn.plus(pendingWithdrawal.amount);
     updatePayerRegistryTotalWithdrawnSnapshot(timestamp, payerRegistry.totalWithdrawn);
 
     _updatePayerRegistryTotalWithdrawable(payerRegistry, timestamp);
 }
 
-function _requestWithdrawal(
-    payerRegistry: PayerRegistry,
-    payer: Payer,
-    amount: BigInt,
-    withdrawableTimestamp: Timestamp,
-    timestamp: Timestamp
-): void {
-    payer.pendingWithdrawal = amount;
-    updatePayerRegistryPendingWithdrawalSnapshot(payer, timestamp, payer.pendingWithdrawal);
-
-    payerRegistry.totalPendingWithdrawals = payerRegistry.totalPendingWithdrawals.plus(payer.pendingWithdrawal);
+function _requestWithdrawal(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: i32): void {
+    payerRegistry.totalPendingWithdrawals = payerRegistry.totalPendingWithdrawals.plus(amount);
     updatePayerRegistryTotalPendingWithdrawalsSnapshot(timestamp, payerRegistry.totalPendingWithdrawals);
-
-    payer.withdrawableTimestamp = withdrawableTimestamp;
-    updatePayerRegistryWithdrawableTimestampSnapshot(payer, timestamp, payer.withdrawableTimestamp);
 
     _decreaseBalance(payerRegistry, payer, amount, timestamp);
 }
 
-function _increaseBalance(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: Timestamp): BigInt {
+function _increaseBalance(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: i32): BigInt {
     const startingBalance = payer.balance;
 
     payer.balance = payer.balance.plus(amount);
@@ -847,7 +836,7 @@ function _increaseBalance(payerRegistry: PayerRegistry, payer: Payer, amount: Bi
     return _getDebt(startingBalance).minus(_getDebt(payer.balance));
 }
 
-function _decreaseBalance(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: Timestamp): BigInt {
+function _decreaseBalance(payerRegistry: PayerRegistry, payer: Payer, amount: BigInt, timestamp: i32): BigInt {
     const startingBalance = payer.balance;
 
     payer.balance = payer.balance.minus(amount);

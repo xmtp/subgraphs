@@ -1,4 +1,4 @@
-import { Address, BigInt, Timestamp, dataSource } from '@graphprotocol/graph-ts';
+import { Address, BigInt, dataSource } from '@graphprotocol/graph-ts';
 
 import {
     Account,
@@ -6,6 +6,7 @@ import {
     FeeTokenBalanceSnapshot,
     FeeTokenBurnedSnapshot,
     FeeTokenHoldersSnapshot,
+    FeeTokenImplementationSnapshot,
     FeeTokenMintedSnapshot,
     FeeTokenReceivedSnapshot,
     FeeTokenSentSnapshot,
@@ -16,11 +17,12 @@ import {
     FeeTokenTransfer,
 } from '../generated/schema';
 
-import { Transfer as TransferEvent } from '../generated/FeeToken/FeeToken';
+import { Transfer as TransferEvent, Upgraded as UpgradedEvent } from '../generated/FeeToken/FeeToken';
 
 import { getAccount, getPayerRegistry, _updatePayerRegistryExcess } from './common';
 
 const PAYER_REGISTRY_ADDRESS = Address.fromString(dataSource.context().getString('payerRegistry'));
+const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
 const ZERO_ADDRESS = Address.fromString('0x0000000000000000000000000000000000000000');
 
 /* ============ Handlers ============ */
@@ -66,6 +68,17 @@ export function handleTransfer(event: TransferEvent): void {
     transfer.save();
 }
 
+export function handleUpgraded(event: UpgradedEvent): void {
+    const feeToken = getFeeToken(event.address);
+    const timestamp = event.block.timestamp.toI32();
+
+    feeToken.implementation = event.params.implementation.toHexString();
+    updateImplementationSnapshot(timestamp, feeToken.implementation);
+
+    feeToken.lastUpdate = timestamp;
+    feeToken.save();
+}
+
 /* ============ Entity Helpers ============ */
 
 function getFeeToken(address: Address): FeeToken {
@@ -79,6 +92,7 @@ function getFeeToken(address: Address): FeeToken {
 
     feeToken.lastUpdate = 0;
     feeToken.address = address.toHexString();
+    feeToken.implementation = STARTING_IMPLEMENTATION;
     feeToken.totalSupply = BigInt.fromI32(0);
     feeToken.holders = 0;
     feeToken.totalTransferred = BigInt.fromI32(0);
@@ -90,7 +104,7 @@ function getFeeToken(address: Address): FeeToken {
 
 /* ============ Fee Token Snapshot Helpers ============ */
 
-function updateTotalSupplySnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateTotalSupplySnapshot(timestamp: i32, value: BigInt): void {
     const id = `FeeTokenTotalSupplySnapshot-${timestamp.toString()}`;
 
     let snapshot = FeeTokenTotalSupplySnapshot.load(id);
@@ -106,7 +120,7 @@ function updateTotalSupplySnapshot(timestamp: Timestamp, value: BigInt): void {
     snapshot.save();
 }
 
-function updateTotalMintedSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateTotalMintedSnapshot(timestamp: i32, value: BigInt): void {
     const id = `FeeTokenTotalMintedSnapshot-${timestamp.toString()}`;
 
     let snapshot = FeeTokenTotalMintedSnapshot.load(id);
@@ -122,7 +136,7 @@ function updateTotalMintedSnapshot(timestamp: Timestamp, value: BigInt): void {
     snapshot.save();
 }
 
-function updateTotalBurnedSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateTotalBurnedSnapshot(timestamp: i32, value: BigInt): void {
     const id = `FeeTokenTotalBurnedSnapshot-${timestamp.toString()}`;
 
     let snapshot = FeeTokenTotalBurnedSnapshot.load(id);
@@ -138,7 +152,7 @@ function updateTotalBurnedSnapshot(timestamp: Timestamp, value: BigInt): void {
     snapshot.save();
 }
 
-function updateTotalTransferredSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateTotalTransferredSnapshot(timestamp: i32, value: BigInt): void {
     const id = `FeeTokenTotalTransferredSnapshot-${timestamp.toString()}`;
 
     let snapshot = FeeTokenTotalTransferredSnapshot.load(id);
@@ -154,7 +168,7 @@ function updateTotalTransferredSnapshot(timestamp: Timestamp, value: BigInt): vo
     snapshot.save();
 }
 
-function updateHoldersSnapshot(timestamp: Timestamp, value: i32): void {
+function updateHoldersSnapshot(timestamp: i32, value: i32): void {
     const id = `FeeTokenHoldersSnapshot-${timestamp.toString()}`;
 
     let snapshot = FeeTokenHoldersSnapshot.load(id);
@@ -170,9 +184,25 @@ function updateHoldersSnapshot(timestamp: Timestamp, value: i32): void {
     snapshot.save();
 }
 
+function updateImplementationSnapshot(timestamp: i32, value: string): void {
+    const id = `FeeTokenImplementationSnapshot-${timestamp.toString()}`;
+
+    let snapshot = FeeTokenImplementationSnapshot.load(id);
+
+    if (!snapshot) {
+        snapshot = new FeeTokenImplementationSnapshot(id);
+
+        snapshot.timestamp = timestamp;
+    }
+
+    snapshot.value = value;
+
+    snapshot.save();
+}
+
 /* ============ Account Snapshot Helpers ============ */
 
-function updateBalanceSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateBalanceSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `FeeTokenBalanceSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = FeeTokenBalanceSnapshot.load(id);
@@ -189,7 +219,7 @@ function updateBalanceSnapshot(account: Account, timestamp: Timestamp, value: Bi
     snapshot.save();
 }
 
-function updateReceivedSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateReceivedSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `FeeTokenReceivedSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = FeeTokenReceivedSnapshot.load(id);
@@ -206,7 +236,7 @@ function updateReceivedSnapshot(account: Account, timestamp: Timestamp, value: B
     snapshot.save();
 }
 
-function updateSentSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateSentSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `FeeTokenSentSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = FeeTokenSentSnapshot.load(id);
@@ -223,7 +253,7 @@ function updateSentSnapshot(account: Account, timestamp: Timestamp, value: BigIn
     snapshot.save();
 }
 
-function updateMintedSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateMintedSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `FeeTokenMintedSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = FeeTokenMintedSnapshot.load(id);
@@ -240,7 +270,7 @@ function updateMintedSnapshot(account: Account, timestamp: Timestamp, value: Big
     snapshot.save();
 }
 
-function updateBurnedSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateBurnedSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `FeeTokenBurnedSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = FeeTokenBurnedSnapshot.load(id);
@@ -259,7 +289,7 @@ function updateBurnedSnapshot(account: Account, timestamp: Timestamp, value: Big
 
 /* ============ Contract Stateful Tracking ============ */
 
-function _burn(feeToken: FeeToken, account: Account, amount: BigInt, timestamp: Timestamp): void {
+function _burn(feeToken: FeeToken, account: Account, amount: BigInt, timestamp: i32): void {
     if (amount.equals(BigInt.fromI32(0))) return;
 
     account.feeTokenBalance = account.feeTokenBalance.minus(amount);
@@ -280,7 +310,7 @@ function _burn(feeToken: FeeToken, account: Account, amount: BigInt, timestamp: 
     }
 }
 
-function _mint(feeToken: FeeToken, recipient: Account, amount: BigInt, timestamp: Timestamp): void {
+function _mint(feeToken: FeeToken, recipient: Account, amount: BigInt, timestamp: i32): void {
     if (amount.equals(BigInt.fromI32(0))) return;
 
     if (recipient.feeTokenBalance.equals(BigInt.fromI32(0))) {
@@ -301,13 +331,7 @@ function _mint(feeToken: FeeToken, recipient: Account, amount: BigInt, timestamp
     updateTotalMintedSnapshot(timestamp, feeToken.totalMinted);
 }
 
-function _transfer(
-    feeToken: FeeToken,
-    sender: Account,
-    recipient: Account,
-    amount: BigInt,
-    timestamp: Timestamp
-): void {
+function _transfer(feeToken: FeeToken, sender: Account, recipient: Account, amount: BigInt, timestamp: i32): void {
     if (amount.equals(BigInt.fromI32(0))) return;
 
     if (recipient.feeTokenBalance.equals(BigInt.fromI32(0))) {

@@ -1,8 +1,9 @@
-import { Address, BigInt, Timestamp } from '@graphprotocol/graph-ts';
+import { Address, BigInt, dataSource } from '@graphprotocol/graph-ts';
 
 import {
     Account,
     GatewayDeposit,
+    GatewayImplementationSnapshot,
     GatewayInbox,
     GatewayInboxAddressSnapshot,
     GatewayPausedSnapshot,
@@ -16,23 +17,74 @@ import {
 
 import {
     Deposit as DepositEvent,
+    Deposit1 as DepositWithoutRecipientOrInboxEvent,
+    Deposit2 as DepositWithoutRecipientEvent,
     InboxUpdated as InboxUpdatedEvent,
     ParametersSent as ParametersSentEvent,
+    ParametersSent1 as ParametersSentWithInboxEvent,
     PauseStatusUpdated as PauseStatusUpdatedEvent,
     WithdrawalReceived as WithdrawalReceivedEvent,
+    Upgraded as UpgradedEvent,
 } from '../generated/SettlementChainGateway/SettlementChainGateway';
 
 import { getAccount } from './common';
 
+const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
+
 /* ============ Handlers ============ */
 
-export function handleDeposit(event: DepositEvent): void {
-    const gateway = getSettlementChainGateway(event.address);
-    const timestamp = event.block.timestamp.toI32();
-    const transactionHash = event.transaction.hash.toHexString();
-    const logIndex = event.logIndex;
+export function handleDepositWithoutRecipientOrInbox(event: DepositWithoutRecipientOrInboxEvent): void {
+    handleSomeDeposit(
+        event.address,
+        '',
+        event.params.amount,
+        event.params.chainId,
+        event.params.messageNumber,
+        event.block.timestamp.toI32(),
+        event.transaction.hash.toHexString(),
+        event.logIndex
+    );
+}
 
-    gateway.totalDeposited = gateway.totalDeposited.plus(event.params.amount);
+export function handleDepositWithoutRecipient(event: DepositWithoutRecipientEvent): void {
+    handleSomeDeposit(
+        event.address,
+        '',
+        event.params.amount,
+        event.params.chainId,
+        event.params.messageNumber,
+        event.block.timestamp.toI32(),
+        event.transaction.hash.toHexString(),
+        event.logIndex
+    );
+}
+
+export function handleDeposit(event: DepositEvent): void {
+    handleSomeDeposit(
+        event.address,
+        event.params.recipient.toHexString(),
+        event.params.amount,
+        event.params.chainId,
+        event.params.messageNumber,
+        event.block.timestamp.toI32(),
+        event.transaction.hash.toHexString(),
+        event.logIndex
+    );
+}
+
+function handleSomeDeposit(
+    gatewayAddress: Address,
+    recipient: string,
+    amount: BigInt,
+    chainId: BigInt,
+    messageNumber: BigInt,
+    timestamp: i32,
+    transactionHash: string,
+    logIndex: BigInt
+): void {
+    const gateway = getSettlementChainGateway(gatewayAddress);
+
+    gateway.totalDeposited = gateway.totalDeposited.plus(amount);
     updateGatewayTotalDepositedSnapshot(timestamp, gateway.totalDeposited);
 
     gateway.lastUpdate = timestamp;
@@ -40,10 +92,10 @@ export function handleDeposit(event: DepositEvent): void {
 
     const deposit = new GatewayDeposit(`SettlementChainGatewayDeposit-${transactionHash}-${logIndex.toString()}`);
 
-    deposit.recipient = ''; // TODO: event.params.recipient.toHexString()
-    deposit.amount = event.params.amount;
-    deposit.chainId = event.params.chainId;
-    deposit.messageNumber = event.params.messageNumber;
+    deposit.recipient = recipient;
+    deposit.amount = amount;
+    deposit.chainId = chainId;
+    deposit.messageNumber = messageNumber;
     deposit.timestamp = timestamp;
     deposit.transactionHash = transactionHash;
     deposit.logIndex = logIndex;
@@ -51,21 +103,52 @@ export function handleDeposit(event: DepositEvent): void {
     deposit.save();
 }
 
+export function handleParametersSentWithInbox(event: ParametersSentWithInboxEvent): void {
+    handleParameters(
+        event.address,
+        event.params.keys,
+        event.params.chainId,
+        event.params.messageNumber,
+        event.block.timestamp.toI32(),
+        event.transaction.hash.toHexString(),
+        event.logIndex
+    );
+}
+
 export function handleParametersSent(event: ParametersSentEvent): void {
-    const gateway = getSettlementChainGateway(event.address);
-    const timestamp = event.block.timestamp.toI32();
+    handleParameters(
+        event.address,
+        event.params.keys,
+        event.params.chainId,
+        event.params.messageNumber,
+        event.block.timestamp.toI32(),
+        event.transaction.hash.toHexString(),
+        event.logIndex
+    );
+}
+
+function handleParameters(
+    gatewayAddress: Address,
+    keys: string[],
+    chainId: BigInt,
+    messageNumber: BigInt,
+    timestamp: i32,
+    transactionHash: string,
+    logIndex: BigInt
+): void {
+    const gateway = getSettlementChainGateway(gatewayAddress);
 
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const parameterSend = new ParameterSend(
-        `ParameterSend-${event.transaction.hash.toHexString()}-${event.logIndex.toString()}`
-    );
+    const parameterSend = new ParameterSend(`ParameterSend-${transactionHash}-${logIndex.toString()}`);
 
-    parameterSend.keys = event.params.keys;
+    parameterSend.keys = keys;
+    parameterSend.chainId = chainId;
+    parameterSend.messageNumber = messageNumber;
     parameterSend.timestamp = timestamp;
-    parameterSend.transactionHash = event.transaction.hash.toHexString();
-    parameterSend.logIndex = event.logIndex;
+    parameterSend.transactionHash = transactionHash;
+    parameterSend.logIndex = logIndex;
 
     parameterSend.save();
 }
@@ -124,6 +207,17 @@ export function handlePauseStatusUpdated(event: PauseStatusUpdatedEvent): void {
     gateway.save();
 }
 
+export function handleUpgraded(event: UpgradedEvent): void {
+    const gateway = getSettlementChainGateway(event.address);
+    const timestamp = event.block.timestamp.toI32();
+
+    gateway.implementation = event.params.implementation.toHexString();
+    updateGatewayImplementationSnapshot(timestamp, gateway.implementation);
+
+    gateway.lastUpdate = timestamp;
+    gateway.save();
+}
+
 /* ============ Entity Helpers ============ */
 
 function getSettlementChainGateway(address: Address): SettlementChainGateway {
@@ -137,6 +231,7 @@ function getSettlementChainGateway(address: Address): SettlementChainGateway {
 
     gateway.lastUpdate = 0;
     gateway.address = address.toHexString();
+    gateway.implementation = STARTING_IMPLEMENTATION;
     gateway.paused = false;
     gateway.totalWithdrawalsReceived = BigInt.fromI32(0);
     gateway.totalDeposited = BigInt.fromI32(0);
@@ -162,7 +257,7 @@ function getGatewayInbox(chainId: BigInt): GatewayInbox {
 
 /* ============ AppChainGateway Snapshot Helpers ============ */
 
-function updateGatewayTotalDepositedSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateGatewayTotalDepositedSnapshot(timestamp: i32, value: BigInt): void {
     const id = `SettlementChainGatewayTotalDepositedSnapshot-${timestamp.toString()}`;
 
     let snapshot = GatewayTotalDepositedSnapshot.load(id);
@@ -178,7 +273,7 @@ function updateGatewayTotalDepositedSnapshot(timestamp: Timestamp, value: BigInt
     snapshot.save();
 }
 
-function updateGatewayTotalWithdrawalsReceivedSnapshot(timestamp: Timestamp, value: BigInt): void {
+function updateGatewayTotalWithdrawalsReceivedSnapshot(timestamp: i32, value: BigInt): void {
     const id = `SettlementChainGatewayTotalWithdrawalsReceivedSnapshot-${timestamp.toString()}`;
 
     let snapshot = GatewayTotalWithdrawalsReceivedSnapshot.load(id);
@@ -194,7 +289,7 @@ function updateGatewayTotalWithdrawalsReceivedSnapshot(timestamp: Timestamp, val
     snapshot.save();
 }
 
-function updateGatewayPausedSnapshot(timestamp: Timestamp, value: boolean): void {
+function updateGatewayPausedSnapshot(timestamp: i32, value: boolean): void {
     const id = `SettlementChainGatewayPausedSnapshot-${timestamp.toString()}`;
 
     let snapshot = GatewayPausedSnapshot.load(id);
@@ -210,9 +305,25 @@ function updateGatewayPausedSnapshot(timestamp: Timestamp, value: boolean): void
     snapshot.save();
 }
 
+function updateGatewayImplementationSnapshot(timestamp: i32, value: string): void {
+    const id = `SettlementChainGatewayImplementationSnapshot-${timestamp.toString()}`;
+
+    let snapshot = GatewayImplementationSnapshot.load(id);
+
+    if (!snapshot) {
+        snapshot = new GatewayImplementationSnapshot(id);
+
+        snapshot.timestamp = timestamp;
+    }
+
+    snapshot.value = value;
+
+    snapshot.save();
+}
+
 /* ============ Account Snapshot Helpers ============ */
 
-function updateAccountGatewayWithdrawalsReceivedSnapshot(account: Account, timestamp: Timestamp, value: BigInt): void {
+function updateAccountGatewayWithdrawalsReceivedSnapshot(account: Account, timestamp: i32, value: BigInt): void {
     const id = `SettlementChainGatewayWithdrawalsReceivedSnapshot-${account.address}-${timestamp.toString()}`;
 
     let snapshot = GatewayWithdrawalsReceivedSnapshot.load(id);
@@ -231,7 +342,7 @@ function updateAccountGatewayWithdrawalsReceivedSnapshot(account: Account, times
 
 /* ============ Inbox Snapshot Helpers ============ */
 
-function updateGatewayInboxAddressSnapshot(inbox: GatewayInbox, timestamp: Timestamp, value: string): void {
+function updateGatewayInboxAddressSnapshot(inbox: GatewayInbox, timestamp: i32, value: string): void {
     const id = `GatewayInboxAddressSnapshot-${inbox.id}-${timestamp.toString()}`;
 
     let snapshot = GatewayInboxAddressSnapshot.load(id);
