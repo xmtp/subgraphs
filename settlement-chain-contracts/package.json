@@ -1,0 +1,14 @@
+{
+  "name": "xmtp-settlement-chain-subgraph",
+  "version": "1.0.0",
+  "description": "XMTP Payer Portal Settlement Chain (Base Sepolia) Subgraph",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy <YOUR_BASE_SEPOLIA_SUBGRAPH_SLUG> --network base-sepolia --version-label $(grep VERSION_LABEL .env | cut -d '=' -f2) --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key $(grep DEPLOY_KEY .env | cut -d '=' -f2)",
+    "create-local": "graph create --node http://localhost:8020/ xmtp-settlement-chain",
+    "remove-local": "graph remove --node http://localhost:8020/ xmtp-settlement-chain",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 xmtp-settlement-chain",
+    "test": "graph test"
+  }
+}
