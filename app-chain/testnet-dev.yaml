@@ -1,0 +1,176 @@
+specVersion: 1.2.0
+schema:
+    file: ./schema.graphql
+dataSources:
+    - kind: ethereum
+      name: GroupMessageBroadcaster
+      network: xmtp-ropsten
+      source:
+          abi: GroupMessageBroadcaster
+          address: '0xbDF24fD4bBaE0E3CCd42Fb6C07EC6eA347A1Ef87'
+          startBlock: 0
+      context:
+          startingImplementation:
+              type: String
+              data: '0x12E32A6D3B23d7861Ffd41C6308dc89a91472086'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - Account
+              - FeesSnapshot
+              - GroupMessage
+              - GroupMessageBroadcaster
+              - GroupMessageBroadcasterImplementationSnapshot
+              - GroupMessageBroadcasterPausedSnapshot
+              - GroupMessageBytesSentSnapshot
+              - GroupMessageFeesSnapshot
+              - GroupMessagePayloadBootstrapperSnapshot
+              - GroupMessagesSentSnapshot
+              - MaxGroupMessagePayloadSizeSnapshot
+              - MinGroupMessagePayloadSizeSnapshot
+              - TotalGroupMessageBytesSentSnapshot
+              - TotalGroupMessageFeesSnapshot
+              - TotalGroupMessagesSentSnapshot
+          abis:
+              - name: GroupMessageBroadcaster
+                file: ./abis/GroupMessageBroadcaster.abi.json
+          eventHandlers:
+              - event: MessageSent(indexed bytes16,bytes,indexed uint64)
+                handler: handleMessageSent
+                receipt: true
+              - event: MinPayloadSizeUpdated(indexed uint256)
+                handler: handleMinPayloadSizeUpdated
+              - event: MaxPayloadSizeUpdated(indexed uint256)
+                handler: handleMaxPayloadSizeUpdated
+              - event: PauseStatusUpdated(indexed bool)
+                handler: handlePauseStatusUpdated
+              - event: PayloadBootstrapperUpdated(indexed address)
+                handler: handlePayloadBootstrapperUpdated
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/group-message-broadcaster.ts
+    - kind: ethereum
+      name: IdentityUpdateBroadcaster
+      network: xmtp-ropsten
+      source:
+          abi: IdentityUpdateBroadcaster
+          address: '0x559c8c08A251Cc917ccCde13Caf273156d0c8f35'
+          startBlock: 0
+      context:
+          startingImplementation:
+              type: String
+              data: '0x34717EAa84DABB009Fb98a57Eeb9cfeF06fc1eCB'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - Account
+              - FeesSnapshot
+              - IdentityUpdate
+              - IdentityUpdateBroadcaster
+              - IdentityUpdateBroadcasterImplementationSnapshot
+              - IdentityUpdateBroadcasterPausedSnapshot
+              - IdentityUpdateBytesCreatedSnapshot
+              - IdentityUpdateFeesSnapshot
+              - IdentityUpdatePayloadBootstrapperSnapshot
+              - IdentityUpdatesCreatedSnapshot
+              - MaxIdentityUpdatePayloadSizeSnapshot
+              - MinIdentityUpdatePayloadSizeSnapshot
+              - TotalIdentityUpdateBytesCreatedSnapshot
+              - TotalIdentityUpdateFeesSnapshot
+              - TotalIdentityUpdatesCreatedSnapshot
+          abis:
+              - name: IdentityUpdateBroadcaster
+                file: ./abis/IdentityUpdateBroadcaster.abi.json
+          eventHandlers:
+              - event: IdentityUpdateCreated(indexed bytes32,bytes,indexed uint64)
+                handler: handleIdentityUpdateCreated
+                receipt: true
+              - event: MinPayloadSizeUpdated(indexed uint256)
+                handler: handleMinPayloadSizeUpdated
+              - event: MaxPayloadSizeUpdated(indexed uint256)
+                handler: handleMaxPayloadSizeUpdated
+              - event: PauseStatusUpdated(indexed bool)
+                handler: handlePauseStatusUpdated
+              - event: PayloadBootstrapperUpdated(indexed address)
+                handler: handlePayloadBootstrapperUpdated
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/identity-update-broadcaster.ts
+    - kind: ethereum
+      name: AppChainGateway
+      network: xmtp-ropsten
+      source:
+          abi: AppChainGateway
+          address: '0xB64D5bF62F30512Bd130C0D7c80DB7ac1e6801a3'
+          startBlock: 0
+      context:
+          startingImplementation:
+              type: String
+              data: '0x1CBd88E4cB7e4Ae8F3dB9103002Ab5A5DAa9d3C0'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - Account
+              - AppChainGateway
+              - AppChainGatewayImplementationSnapshot
+              - AppChainGatewayPausedSnapshot
+              - DepositsReceivedSnapshot
+              - ParameterReceival
+              - ReceivedDeposit
+              - TotalDepositedSnapshot
+              - TotalWithdrawnSnapshot
+              - Withdrawal
+          abis:
+              - name: AppChainGateway
+                file: ./abis/AppChainGateway.abi.json
+          eventHandlers:
+              - event: DepositReceived(indexed address,uint256)
+                handler: handleDepositReceived
+                receipt: true
+              - event: ParametersReceived(indexed uint256,string[])
+                handler: handleParametersReceived
+              - event: PauseStatusUpdated(indexed bool)
+                handler: handlePauseStatusUpdated
+              - event: Withdrawal(indexed uint256,indexed address,uint256)
+                handler: handleWithdrawal
+                receipt: true
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/app-chain-gateway.ts
+    - kind: ethereum
+      name: AppChainParameterRegistry
+      network: xmtp-ropsten
+      source:
+          abi: AppChainParameterRegistry
+          address: '0xB2EA84901BC8c2b18Da7a51db1e1Ca2aAeDf844D'
+          startBlock: 0
+      context:
+          startingImplementation:
+              type: String
+              data: '0x409A1F979C1eD2005C3b06CdCC8291D0a1A543C2'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - AppChainParameterRegistry
+              - Parameter
+              - ParameterRegistryImplementationSnapshot
+              - ParameterValueSnapshot
+          abis:
+              - name: AppChainParameterRegistry
+                file: ./abis/AppChainParameterRegistry.abi.json
+          eventHandlers:
+              - event: ParameterSet(indexed string,indexed bytes32)
+                handler: handleIndexParameterSet
+              - event: ParameterSet(indexed string,string,bytes32)
+                handler: handleParameterSet
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/app-chain-parameter-registry.ts

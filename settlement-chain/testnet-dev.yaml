@@ -1,0 +1,204 @@
+specVersion: 1.2.0
+schema:
+    file: ./schema.graphql
+dataSources:
+    - kind: ethereum
+      name: PayerRegistry
+      network: base-sepolia
+      source:
+          abi: PayerRegistry
+          address: '0x77a9129Cb584DF076a64A995dDEF9158d589D80c'
+          startBlock: 27893364
+      context:
+          startingImplementation:
+              type: String
+              data: '0x2792D400bcA3C83b39D1931a8dFEa291b86FeCFb'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - Payer
+              - PayerRegistry
+              - PayerRegistryBalanceSnapshot
+              - PayerRegistryBatchUsageSettlement
+              - PayerRegistryDeposit
+              - PayerRegistryDepositedSnapshot
+              - PayerRegistryExcessSnapshot
+              - PayerRegistryExcessTransfer
+              - PayerRegistryFeeDistributorSnapshot
+              - PayerRegistryImplementationSnapshot
+              - PayerRegistryIncurredDebtSnapshot
+              - PayerRegistryMinimumDepositSnapshot
+              - PayerRegistryPausedSnapshot
+              - PayerRegistryRepaidDebtSnapshot
+              - PayerRegistrySettlerSnapshot
+              - PayerRegistryTotalBalanceSnapshot
+              - PayerRegistryTotalDebtSnapshot
+              - PayerRegistryTotalDepositedSnapshot
+              - PayerRegistryTotalDepositsSnapshot
+              - PayerRegistryTotalExcessTransferredSnapshot
+              - PayerRegistryTotalIncurredDebtSnapshot
+              - PayerRegistryTotalPendingWithdrawalsSnapshot
+              - PayerRegistryTotalRepaidDebtSnapshot
+              - PayerRegistryTotalUsageSettledSnapshot
+              - PayerRegistryTotalWithdrawableSnapshot
+              - PayerRegistryTotalWithdrawnSnapshot
+              - PayerRegistryUsageSettledSnapshot
+              - PayerRegistryUsageSettlement
+              - PayerRegistryWithdrawal
+              - PayerRegistryWithdrawLockPeriodSnapshot
+              - PayerRegistryWithdrawnSnapshot
+          abis:
+              - name: PayerRegistry
+                file: ./abis/PayerRegistry.abi.json
+          eventHandlers:
+              - event: Deposit(indexed address,uint96)
+                handler: handleDeposit
+              - event: ExcessTransferred(uint96)
+                handler: handleExcessTransferred
+              - event: FeeDistributorUpdated(indexed address)
+                handler: handleFeeDistributorUpdated
+              - event: MinimumDepositUpdated(uint96)
+                handler: handleMinimumDepositUpdated
+              - event: PauseStatusUpdated(indexed bool)
+                handler: handlePauseStatusUpdated
+              - event: SettlerUpdated(indexed address)
+                handler: handleSettlerUpdated
+              - event: UsageSettled(indexed address,uint96)
+                handler: handleUsageSettled
+              - event: WithdrawLockPeriodUpdated(uint32)
+                handler: handleWithdrawLockPeriodUpdated
+              - event: WithdrawalCancelled(indexed address)
+                handler: handleWithdrawalCancelled
+              - event: WithdrawalFinalized(indexed address)
+                handler: handleWithdrawalFinalized
+              - event: WithdrawalRequested(indexed address,uint96,uint32)
+                handler: handleWithdrawalRequested
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/payer-registry.ts
+    - kind: ethereum
+      name: SettlementChainGateway
+      network: base-sepolia
+      source:
+          abi: SettlementChainGateway
+          address: '0xB64D5bF62F30512Bd130C0D7c80DB7ac1e6801a3'
+          startBlock: 27893364
+      context:
+          startingImplementation:
+              type: String
+              data: '0x3C8e64a6672ad40330fAB80e749762319d7e588a'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - Account
+              - GatewayDeposit
+              - GatewayImplementationSnapshot
+              - GatewayInbox
+              - GatewayInboxAddressSnapshot
+              - GatewayPausedSnapshot
+              - GatewayReceivedWithdrawal
+              - GatewayTotalDepositedSnapshot
+              - GatewayTotalWithdrawalsReceivedSnapshot
+              - GatewayWithdrawalsReceivedSnapshot
+              - ParameterSend
+              - SettlementChainGateway
+          abis:
+              - name: SettlementChainGateway
+                file: ./abis/SettlementChainGateway.abi.json
+          eventHandlers:
+              - event: Deposit(indexed uint256,indexed uint256,indexed address,uint256)
+                handler: handleDeposit
+              - event: Deposit(indexed uint256,indexed uint256,uint256)
+                handler: handleDepositWithoutRecipientOrInbox
+              - event: Deposit(indexed uint256,indexed address,indexed uint256,uint256)
+                handler: handleDepositWithoutRecipient
+              - event: ParametersSent(indexed uint256,indexed uint256,uint256,string[])
+                handler: handleParametersSent
+              - event: ParametersSent(indexed uint256,indexed address,indexed uint256,uint256,string[])
+                handler: handleParametersSentWithInbox
+              - event: InboxUpdated(indexed uint256,indexed address)
+                handler: handleInboxUpdated
+              - event: WithdrawalReceived(indexed address,uint256)
+                handler: handleWithdrawalReceived
+              - event: PauseStatusUpdated(indexed bool)
+                handler: handlePauseStatusUpdated
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/settlement-chain-gateway.ts
+    - kind: ethereum
+      name: SettlementChainParameterRegistry
+      network: base-sepolia
+      source:
+          abi: SettlementChainParameterRegistry
+          address: '0xB2EA84901BC8c2b18Da7a51db1e1Ca2aAeDf844D'
+          startBlock: 27893364
+      context:
+          startingImplementation:
+              type: String
+              data: '0xFAD6A3aff7663663997F4923372716C76377314d'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - Parameter
+              - ParameterRegistryImplementationSnapshot
+              - ParameterValueSnapshot
+              - SettlementChainParameterRegistry
+          abis:
+              - name: SettlementChainParameterRegistry
+                file: ./abis/SettlementChainParameterRegistry.abi.json
+          eventHandlers:
+              - event: ParameterSet(indexed string,indexed bytes32)
+                handler: handleIndexParameterSet
+              - event: ParameterSet(indexed string,string,bytes32)
+                handler: handleParameterSet
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/settlement-chain-parameter-registry.ts
+    - kind: ethereum
+      name: FeeToken
+      network: base-sepolia
+      source:
+          abi: FeeToken
+          address: '0x63C6667798fdA65E2E29228C43fbfDa0Cd4634A8'
+          startBlock: 27893364
+      context:
+          payerRegistry:
+              type: String
+              data: '0x77a9129Cb584DF076a64A995dDEF9158d589D80c'
+          startingImplementation:
+              type: String
+              data: '0x32bBE504aF9695294640CfbeF77093FDCa76C018'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - Account
+              - FeeToken
+              - FeeTokenBalanceSnapshot
+              - FeeTokenBurnedSnapshot
+              - FeeTokenHoldersSnapshot
+              - FeeTokenImplementationSnapshot
+              - FeeTokenMintedSnapshot
+              - FeeTokenReceivedSnapshot
+              - FeeTokenSentSnapshot
+              - FeeTokenTotalBurnedSnapshot
+              - FeeTokenTotalMintedSnapshot
+              - FeeTokenTotalSupplySnapshot
+              - FeeTokenTotalTransferredSnapshot
+              - FeeTokenTransfer
+          abis:
+              - name: FeeToken
+                file: ./abis/FeeToken.abi.json
+          eventHandlers:
+              - event: Transfer(indexed address,indexed address,uint256)
+                handler: handleTransfer
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/fee-token.ts

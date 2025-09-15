@@ -1,0 +1,486 @@
+# ============ Generic - Snapshot Interfaces ============ #
+
+interface SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+}
+
+interface IntSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: Int!
+}
+
+interface BigIntSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+interface TimestampSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: Timestamp!
+}
+
+interface StringSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
+interface BooleanSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: Boolean!
+}
+
+# ============ Account - Snapshot Interfaces ============ #
+
+interface AccountSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+}
+
+# ============ Account - Lifetime Total Snapshots ============ #
+
+type GroupMessagesSentSnapshot implements AccountSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+    value: BigInt!
+}
+
+type GroupMessageBytesSentSnapshot implements AccountSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+    value: BigInt!
+}
+
+type GroupMessageFeesSnapshot implements AccountSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+    value: BigInt!
+}
+
+type IdentityUpdatesCreatedSnapshot implements AccountSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+    value: BigInt!
+}
+
+type IdentityUpdateBytesCreatedSnapshot implements AccountSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+    value: BigInt!
+}
+
+type IdentityUpdateFeesSnapshot implements AccountSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+    value: BigInt!
+}
+
+type FeesSnapshot implements AccountSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+    value: BigInt!
+}
+
+type DepositsReceivedSnapshot implements AccountSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    account: Account! @index
+    value: BigInt!
+}
+
+# ============ Account - Event Entities ============ #
+
+type GroupMessage @entity(immutable: true) {
+    id: ID! @unique
+    account: Account! @index
+    groupId: String! @index
+    sequenceId: BigInt! @unique @index
+    messageSize: Int!
+    timestamp: Timestamp!
+    transactionHash: String!
+    logIndex: BigInt!
+    fee: BigInt!
+}
+
+type IdentityUpdate @entity(immutable: false) {
+    id: ID! @unique
+    account: Account! @index
+    inboxId: String! @index
+    sequenceId: BigInt! @unique @index
+    identityUpdateSize: Int!
+    timestamp: Timestamp!
+    transactionHash: String!
+    logIndex: BigInt!
+    fee: BigInt!
+}
+
+# ============ Account - Entity ============ #
+
+type Account @entity(immutable: false) {
+    # Entity Properties
+    id: ID! @unique
+    lastUpdate: Timestamp!
+    address: String! @unique
+
+    # Lifetime Totals (and snapshots)
+    groupMessagesSent: BigInt!
+    groupMessagesSentSnapshots: [GroupMessagesSentSnapshot!] @derivedFrom(field: "account")
+    groupMessageBytesSent: BigInt!
+    groupMessageBytesSentSnapshots: [GroupMessageBytesSentSnapshot!] @derivedFrom(field: "account")
+    groupMessageFees: BigInt!
+    groupMessageFeesSnapshots: [GroupMessageFeesSnapshot!] @derivedFrom(field: "account")
+    identityUpdatesCreated: BigInt!
+    identityUpdatesCreatedSnapshots: [IdentityUpdatesCreatedSnapshot!] @derivedFrom(field: "account")
+    identityUpdateBytesCreated: BigInt!
+    identityUpdateBytesCreatedSnapshots: [IdentityUpdateBytesCreatedSnapshot!] @derivedFrom(field: "account")
+    identityUpdateFees: BigInt!
+    identityUpdateFeesSnapshots: [IdentityUpdateFeesSnapshot!] @derivedFrom(field: "account")
+    fees: BigInt!
+    feesSnapshots: [FeesSnapshot!] @derivedFrom(field: "account")
+    depositsReceived: BigInt!
+    depositsReceivedSnapshots: [DepositsReceivedSnapshot!] @derivedFrom(field: "account")
+
+    # Event Entities
+    groupMessages: [GroupMessage!] @derivedFrom(field: "account")
+    identityUpdates: [IdentityUpdate!] @derivedFrom(field: "account")
+    receivedDeposits: [ReceivedDeposit!] @derivedFrom(field: "recipient")
+}
+
+# ============ GroupMessageBroadcaster - Snapshot Interfaces ============ #
+
+interface GroupMessageBroadcasterSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+}
+
+# ============ GroupMessageBroadcaster - State Variable Snapshots ============ #
+
+type GroupMessageBroadcasterImplementationSnapshot implements GroupMessageBroadcasterSnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
+type MinGroupMessagePayloadSizeSnapshot implements GroupMessageBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type MaxGroupMessagePayloadSizeSnapshot implements GroupMessageBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type GroupMessageBroadcasterPausedSnapshot implements GroupMessageBroadcasterSnapshotEntity & BooleanSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: Boolean!
+}
+
+type GroupMessagePayloadBootstrapperSnapshot implements GroupMessageBroadcasterSnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
+# ============ GroupMessageBroadcaster - Lifetime Total Snapshots ============ #
+
+type TotalGroupMessagesSentSnapshot implements GroupMessageBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type TotalGroupMessageBytesSentSnapshot implements GroupMessageBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type TotalGroupMessageFeesSnapshot implements GroupMessageBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+# ============ GroupMessageBroadcaster - Entity ============ #
+
+type GroupMessageBroadcaster @entity(immutable: false) {
+    # Entity Properties
+    id: ID! @unique
+    lastUpdate: Timestamp!
+    address: String! @unique
+
+    # State Variables (and snapshots)
+    implementation: String!
+    minPayloadSize: BigInt!
+    maxPayloadSize: BigInt!
+    paused: Boolean!
+    payloadBootstrapper: String!
+
+    # Lifetime Totals (and snapshots)
+    totalGroupMessagesSent: BigInt!
+    totalGroupMessageBytesSent: BigInt!
+    totalGroupMessageFees: BigInt!
+}
+
+# ============ IdentityUpdateBroadcaster - Snapshot Interfaces ============ #
+
+interface IdentityUpdateBroadcasterSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+}
+
+# ============ IdentityUpdateBroadcaster - State Variable Snapshots ============ #
+
+type IdentityUpdateBroadcasterImplementationSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
+type MinIdentityUpdatePayloadSizeSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type MaxIdentityUpdatePayloadSizeSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type IdentityUpdateBroadcasterPausedSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & BooleanSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: Boolean!
+}
+
+type IdentityUpdatePayloadBootstrapperSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
+# ============ IdentityUpdateBroadcaster - Lifetime Total Snapshots ============ #
+
+type TotalIdentityUpdatesCreatedSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type TotalIdentityUpdateBytesCreatedSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type TotalIdentityUpdateFeesSnapshot implements IdentityUpdateBroadcasterSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+# ============ IdentityUpdateBroadcaster - Entity ============ #
+
+type IdentityUpdateBroadcaster @entity(immutable: false) {
+    # Entity Properties
+    id: ID! @unique
+    lastUpdate: Timestamp!
+    address: String! @unique
+
+    # State Variables (and snapshots)
+    implementation: String!
+    minPayloadSize: BigInt!
+    maxPayloadSize: BigInt!
+    paused: Boolean!
+    payloadBootstrapper: String!
+
+    # Lifetime Totals (and snapshots)
+    totalIdentityUpdatesCreated: BigInt!
+    totalIdentityUpdateBytesCreated: BigInt!
+    totalIdentityUpdateFees: BigInt!
+}
+
+# ============ AppChainParameterRegistry Parameter - Snapshot Interfaces ============ #
+
+interface ParameterSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    parameter: Parameter! @index
+}
+
+# ============ AppChainParameterRegistry Parameter - State Variable Snapshots ============ #
+
+type ParameterValueSnapshot implements ParameterSnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    parameter: Parameter! @index
+    value: String!
+}
+
+# ============ AppChainParameterRegistry Parameter - Entity ============ #
+
+type Parameter @entity(immutable: false) {
+    id: ID! @unique
+    lastUpdate: Timestamp!
+    key: String! @unique @index
+    value: String!
+    valueSnapshot: ParameterValueSnapshot! @derivedFrom(field: "parameter")
+}
+
+# ============ AppChainParameterRegistry - Snapshot Interfaces ============ #
+
+interface ParameterRegistrySnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+}
+
+# ============ AppChainParameterRegistry - State Variable Snapshots ============ #
+
+type ParameterRegistryImplementationSnapshot implements ParameterRegistrySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
+# ============ AppChainParameterRegistry - Entity ============ #
+
+type AppChainParameterRegistry @entity(immutable: false) {
+    # Entity Properties
+    id: ID! @unique
+    lastUpdate: Timestamp!
+    address: String! @unique
+
+    # State Variable Mappings
+    implementation: String!
+}
+
+# ============ AppChainGateway - Snapshot Interfaces ============ #
+
+interface AppChainGatewaySnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+}
+
+# ============ AppChainGateway - State Variable Snapshots ============ #
+
+type AppChainGatewayImplementationSnapshot implements AppChainGatewaySnapshotEntity & StringSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: String!
+}
+
+type AppChainGatewayPausedSnapshot implements AppChainGatewaySnapshotEntity & BooleanSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: Boolean!
+}
+
+# ============ AppChainGateway - Lifetime Total Snapshots ============ #
+
+type TotalDepositsReceivedSnapshot implements AppChainGatewaySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+type TotalWithdrawnSnapshot implements AppChainGatewaySnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @unique @index
+    value: BigInt!
+}
+
+# ============ AppChainGateway - Event Entities ============ #
+
+type ParameterReceival @entity(immutable: true) {
+    id: ID! @unique
+    keys: [String!]!
+    timestamp: Timestamp!
+    transactionHash: String!
+    logIndex: BigInt!
+}
+
+type Withdrawal @entity(immutable: true) {
+    id: ID! @unique
+    recipient: String! @index
+    amount: BigInt!
+    messageId: BigInt! @unique @index
+    timestamp: Timestamp!
+    transactionHash: String!
+    logIndex: BigInt!
+    fee: BigInt!
+}
+
+type ReceivedDeposit @entity(immutable: true) {
+    id: ID! @unique
+    recipient: Account! @index
+    amount: BigInt!
+    timestamp: Timestamp!
+    transactionHash: String!
+    logIndex: BigInt!
+    fee: BigInt!
+}
+
+# ============ AppChainGateway - Entity ============ #
+
+type AppChainGateway @entity(immutable: false) {
+    # Entity Properties
+    id: ID! @unique
+    lastUpdate: Timestamp!
+    address: String! @unique
+
+    # State Variable Mappings
+    implementation: String!
+    paused: Boolean!
+
+    # Lifetime Totals (and snapshots)
+    totalWithdrawn: BigInt!
+    totalDepositsReceived: BigInt!
+}
