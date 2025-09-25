@@ -159,6 +159,7 @@ type Payer @entity(immutable: false) {
     deposits: [PayerRegistryDeposit!] @derivedFrom(field: "payer")
     withdrawals: [PayerRegistryWithdrawal!] @derivedFrom(field: "payer")
     usageSettlements: [PayerRegistryUsageSettlement!] @derivedFrom(field: "payer")
+    history: [History!] @derivedFrom(field: "payer")
 }
 
 # ============ PayerRegistry - Snapshot Interfaces ============ #
@@ -713,4 +714,26 @@ type FeeToken @entity(immutable: false) {
     totalTransferred: BigInt!
     totalMinted: BigInt!
     totalBurned: BigInt!
+}
+
+# ============ History - Entity ============ #
+
+enum HistoryEventType {
+    DEPOSIT
+    WITHDRAWAL_REQUESTED
+    WITHDRAWAL_CANCELLED
+    WITHDRAWAL_FINALIZED
+}
+
+type History @entity(immutable: true) {
+    id: ID! @unique
+    eventType: HistoryEventType! @index
+    payer: Payer! @index
+    amount: BigInt!
+    timestamp: Timestamp! @index
+    transactionHash: String! @index
+    logIndex: BigInt!
+    # Optional fields for specific event types
+    withdrawableTimestamp: Timestamp
+    relatedWithdrawal: PayerRegistryWithdrawal
 }

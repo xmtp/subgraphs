@@ -1,6 +1,7 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts';
 
 import {
+    History,
     Payer,
     PayerRegistry,
     PayerRegistryBalanceSnapshot,
@@ -75,6 +76,21 @@ export function handleDeposit(event: DepositEvent): void {
     deposit.logIndex = event.logIndex;
 
     deposit.save();
+
+    // Create History entry
+    const historyId = `History-${event.transaction.hash.toHexString()}-${event.logIndex.toString()}`;
+    const history = new History(historyId);
+
+    history.eventType = "DEPOSIT";
+    history.payer = payer.id;
+    history.amount = amount;
+    history.timestamp = timestamp;
+    history.transactionHash = event.transaction.hash.toHexString();
+    history.logIndex = event.logIndex;
+    history.withdrawableTimestamp = 0;
+    history.relatedWithdrawal = null;
+
+    history.save();
 }
 
 export function handleExcessTransferred(event: ExcessTransferredEvent): void {
@@ -215,6 +231,21 @@ export function handleWithdrawalCancelled(event: WithdrawalCancelledEvent): void
     withdrawal.cancelLogIndex = logIndex;
 
     withdrawal.save();
+
+    // Create History entry
+    const historyId = `History-${transactionHash}-${logIndex.toString()}`;
+    const history = new History(historyId);
+
+    history.eventType = "WITHDRAWAL_CANCELLED";
+    history.payer = payer.id;
+    history.amount = withdrawal.amount;
+    history.timestamp = timestamp;
+    history.transactionHash = transactionHash;
+    history.logIndex = logIndex;
+    history.withdrawableTimestamp = withdrawal.withdrawableTimestamp;
+    history.relatedWithdrawal = withdrawal.id;
+
+    history.save();
 }
 
 export function handleWithdrawalFinalized(event: WithdrawalFinalizedEvent): void {
@@ -242,6 +273,21 @@ export function handleWithdrawalFinalized(event: WithdrawalFinalizedEvent): void
     withdrawal.finalizeLogIndex = logIndex;
 
     withdrawal.save();
+
+    // Create History entry
+    const historyId = `History-${transactionHash}-${logIndex.toString()}`;
+    const history = new History(historyId);
+
+    history.eventType = "WITHDRAWAL_FINALIZED";
+    history.payer = payer.id;
+    history.amount = withdrawal.amount;
+    history.timestamp = timestamp;
+    history.transactionHash = transactionHash;
+    history.logIndex = logIndex;
+    history.withdrawableTimestamp = withdrawal.withdrawableTimestamp;
+    history.relatedWithdrawal = withdrawal.id;
+
+    history.save();
 }
 
 export function handleWithdrawalRequested(event: WithdrawalRequestedEvent): void {
@@ -273,6 +319,21 @@ export function handleWithdrawalRequested(event: WithdrawalRequestedEvent): void
     payer.lastUpdate = timestamp;
 
     payer.save();
+
+    // Create History entry
+    const historyId = `History-${transactionHash}-${logIndex.toString()}`;
+    const history = new History(historyId);
+
+    history.eventType = "WITHDRAWAL_REQUESTED";
+    history.payer = payer.id;
+    history.amount = amount;
+    history.timestamp = timestamp;
+    history.transactionHash = transactionHash;
+    history.logIndex = logIndex;
+    history.withdrawableTimestamp = withdrawableTimestamp;
+    history.relatedWithdrawal = withdrawal.id;
+
+    history.save();
 }
 
 export function handleUpgraded(event: UpgradedEvent): void {
