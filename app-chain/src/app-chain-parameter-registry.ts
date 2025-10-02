@@ -9,7 +9,6 @@ import {
 
 import {
     ParameterSet as ParameterSetEvent,
-    ParameterSet1 as IndexedParameterSetEvent,
     Upgraded as UpgradedEvent,
 } from '../generated/AppChainParameterRegistry/AppChainParameterRegistry';
 
@@ -53,7 +52,7 @@ const KEY_HASHES = [
 
 /* ============ Handlers ============ */
 
-export function handleIndexParameterSet(event: IndexedParameterSetEvent): void {
+export function handleIndexParameterSet(event: ParameterSetEvent): void {
     const timestamp = event.block.timestamp.toI32();
 
     for (let i = 0; i < KEY_HASHES.length; i++) {
@@ -62,11 +61,8 @@ export function handleIndexParameterSet(event: IndexedParameterSetEvent): void {
         return handleParameter(event.address, KEYS[i], event.params.value, timestamp);
     }
 
-    throw new Error(`Unknown parameter key: ${event.params.key.toHexString()}`);
-}
-
-export function handleParameterSet(event: ParameterSetEvent): void {
-    handleParameter(event.address, event.params.key, event.params.value, event.block.timestamp.toI32());
+    // Handle unknown parameter key by using the hash as the key
+    handleParameter(event.address, event.params.key.toHexString(), event.params.value, timestamp);
 }
 
 function handleParameter(parameterRegistryAddress: Address, key: string, value: Bytes, timestamp: i32): void {

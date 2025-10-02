@@ -113,6 +113,7 @@ export function handleWithdrawal(event: WithdrawalEvent): void {
 
     withdrawal.recipient = event.params.recipient.toHexString();
     withdrawal.amount = amount;
+    withdrawal.messageId = event.params.messageId;
     withdrawal.timestamp = timestamp;
     withdrawal.transactionHash = transactionHash;
     withdrawal.logIndex = logIndex;

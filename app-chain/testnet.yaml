@@ -7,7 +7,7 @@ dataSources:
       network: xmtp-ropsten
       source:
           abi: GroupMessageBroadcaster
-          address: '0xbDF24fD4bBaE0E3CCd42Fb6C07EC6eA347A1Ef87'
+          address: '0x6619B1c95eb10d339903E4AA9938314d6E711d17'
           startBlock: 0
       context:
           startingImplementation:
@@ -56,7 +56,7 @@ dataSources:
       network: xmtp-ropsten
       source:
           abi: IdentityUpdateBroadcaster
-          address: '0x559c8c08A251Cc917ccCde13Caf273156d0c8f35'
+          address: '0xD49DCDd95Ce435eaB2E53DBfcBceF5cAAc78D95a'
           startBlock: 0
       context:
           startingImplementation:
@@ -137,7 +137,7 @@ dataSources:
                 handler: handleParametersReceived
               - event: PauseStatusUpdated(indexed bool)
                 handler: handlePauseStatusUpdated
-              - event: Withdrawal(indexed uint256,indexed address,uint256)
+              - event: Withdrawal(indexed address,indexed uint256,indexed address,uint256)
                 handler: handleWithdrawal
                 receipt: true
               - event: Upgraded(indexed address)
@@ -169,8 +169,6 @@ dataSources:
           eventHandlers:
               - event: ParameterSet(indexed string,indexed bytes32)
                 handler: handleIndexParameterSet
-              - event: ParameterSet(indexed string,string,bytes32)
-                handler: handleParameterSet
               - event: Upgraded(indexed address)
                 handler: handleUpgraded
           file: ./src/app-chain-parameter-registry.ts
