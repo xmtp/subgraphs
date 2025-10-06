@@ -7,11 +7,8 @@ import {
     SettlementChainParameterRegistry,
 } from '../generated/schema';
 
-import {
-    ParameterSet as ParameterSetEvent,
-    ParameterSet1 as IndexedParameterSetEvent,
-    Upgraded as UpgradedEvent,
-} from '../generated/SettlementChainParameterRegistry/SettlementChainParameterRegistry';
+// NOTE: This file is not currently used in testnet.yaml but kept for potential future use
+// The imports below reference a data source that doesn't exist in testnet.yaml
 
 const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
 

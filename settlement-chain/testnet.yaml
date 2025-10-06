@@ -7,8 +7,12 @@ dataSources:
       network: base-sepolia
       source:
           abi: PayerRegistry
-          address: '0x2B019EAfE0910a16394D78f3E930bB4c946B5E9e'
+          address: '0xF0bd6Ac8AA00BA083cF95C5438B33488cbd2562B'
           startBlock: 26900619
+      context:
+          startingImplementation:
+              type: String
+              data: '0xF0bd6Ac8AA00BA083cF95C5438B33488cbd2562B'
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.9
@@ -78,13 +82,16 @@ dataSources:
       network: base-sepolia
       source:
           abi: FeeToken
-          address: '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
+          address: '0x63C6667798fdA65E2E29228C43fbfDa0Cd4634A8'
           startBlock: 26900619
           endBlock: 26900619 # Remove this when this is FeeToken/xUSD.
       context:
           payerRegistry:
               type: String
               data: '0x2B019EAfE0910a16394D78f3E930bB4c946B5E9e'
+          startingImplementation:
+              type: String
+              data: '0x63C6667798fdA65E2E29228C43fbfDa0Cd4634A8'
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.9
