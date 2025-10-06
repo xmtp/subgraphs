@@ -120,6 +120,7 @@ dataSources:
               - AppChainGateway
               - AppChainGatewayImplementationSnapshot
               - AppChainGatewayPausedSnapshot
+              - BridgeWithdrawal
               - DepositsReceivedSnapshot
               - ParameterReceival
               - ReceivedDeposit

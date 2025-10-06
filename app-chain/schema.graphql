@@ -458,6 +458,17 @@ type Withdrawal @entity(immutable: true) {
     fee: BigInt!
 }
 
+type BridgeWithdrawal @entity(immutable: false) {
+    id: ID! @unique
+    user: String! @index
+    amount: BigInt!
+    timestamp: Timestamp!
+    blockNumber: BigInt!
+    txHash: String! @index
+    status: String! @index
+    readyTimestamp: Timestamp!
+}
+
 type ReceivedDeposit @entity(immutable: true) {
     id: ID! @unique
     recipient: Account! @index
