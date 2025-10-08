@@ -6,6 +6,7 @@ import {
     AppChainGateway,
     AppChainGatewayImplementationSnapshot,
     AppChainGatewayPausedSnapshot,
+    BridgeWithdrawal,
     DepositsReceivedSnapshot,
     ParameterReceival,
     ReceivedDeposit,
@@ -120,6 +121,24 @@ export function handleWithdrawal(event: WithdrawalEvent): void {
     withdrawal.fee = transactionFee;
 
     withdrawal.save();
+
+    // Create BridgeWithdrawal entity for transaction history UI
+    const bridgeWithdrawalId = `BridgeWithdrawal-${transactionHash}-${logIndex.toString()}`;
+    const bridgeWithdrawal = new BridgeWithdrawal(bridgeWithdrawalId);
+
+    // Bridge withdrawal timelock is approximately 2 hours (7200 seconds)
+    const BRIDGE_TIMELOCK = 7200;
+    const readyTimestamp = timestamp + BRIDGE_TIMELOCK;
+
+    bridgeWithdrawal.user = event.params.account.toHexString();
+    bridgeWithdrawal.amount = amount;
+    bridgeWithdrawal.timestamp = timestamp;
+    bridgeWithdrawal.blockNumber = event.block.number;
+    bridgeWithdrawal.txHash = transactionHash;
+    bridgeWithdrawal.readyTimestamp = readyTimestamp;
+    bridgeWithdrawal.status = "pending";
+
+    bridgeWithdrawal.save();
 }
 
 export function handleUpgraded(event: UpgradedEvent): void {

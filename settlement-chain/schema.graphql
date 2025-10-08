@@ -112,7 +112,7 @@ type PayerRegistryWithdrawal @entity(immutable: false) {
     amount: BigInt!
     withdrawableTimestamp: Timestamp!
     requestTimestamp: Timestamp!
-    requestTransactionHash: String!
+    requestTransactionHash: String! @index
     requestLogIndex: BigInt!
     cancelTimestamp: Timestamp
     cancelTransactionHash: String
@@ -120,6 +120,7 @@ type PayerRegistryWithdrawal @entity(immutable: false) {
     finalizeTimestamp: Timestamp
     finalizeTransactionHash: String
     finalizeLogIndex: BigInt
+    status: String! @index
 }
 
 type PayerRegistryUsageSettlement @entity(immutable: true) {
@@ -736,4 +737,73 @@ type History @entity(immutable: true) {
     # Optional fields for specific event types
     withdrawableTimestamp: Timestamp
     relatedWithdrawal: PayerRegistryWithdrawal
+}
+
+# ============ PayerReport - Snapshot Interfaces ============ #
+
+interface PayerReportSnapshotEntity implements SnapshotEntity {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payerReport: PayerReport! @index
+}
+
+# ============ PayerReport - State Variable Snapshots ============ #
+
+type PayerReportFeesSettledSnapshot implements PayerReportSnapshotEntity & BigIntSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payerReport: PayerReport! @index
+    value: BigInt!
+}
+
+type PayerReportIsSettledSnapshot implements PayerReportSnapshotEntity & BooleanSnapshotEntity & SnapshotEntity
+    @entity(immutable: false) {
+    id: ID! @unique
+    timestamp: Timestamp! @index
+    payerReport: PayerReport! @index
+    value: Boolean!
+}
+
+# ============ PayerReport - Event Entities ============ #
+
+type PayerReportSubsetSettlement @entity(immutable: true) {
+    id: ID! @unique
+    payerReport: PayerReport! @index
+    count: Int!
+    remaining: Int!
+    feesSettled: BigInt!
+    timestamp: Timestamp!
+    transactionHash: String!
+    logIndex: BigInt!
+}
+
+# ============ PayerReport - Entity ============ #
+
+type PayerReport @entity(immutable: false) {
+    # Entity Properties
+    id: ID! @unique
+    lastUpdate: Timestamp!
+    originatorNodeId: Int! @index
+    payerReportIndex: BigInt! @index
+
+    # State Variables (and snapshots)
+    startSequenceId: BigInt!
+    endSequenceId: BigInt!
+    endMinuteSinceEpoch: Int!
+    feesSettled: BigInt!
+    feesSettledSnapshots: [PayerReportFeesSettledSnapshot!] @derivedFrom(field: "payerReport")
+    offset: Int!
+    isSettled: Boolean!
+    isSettledSnapshots: [PayerReportIsSettledSnapshot!] @derivedFrom(field: "payerReport")
+    protocolFeeRate: Int!
+    payersMerkleRoot: String!
+    nodeIds: [Int!]!
+
+    # Event Entities
+    subsetSettlements: [PayerReportSubsetSettlement!] @derivedFrom(field: "payerReport")
+
+    # Metadata
+    submittedTimestamp: Timestamp!
+    submittedTransactionHash: String!
 }

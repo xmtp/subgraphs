@@ -229,6 +229,7 @@ export function handleWithdrawalCancelled(event: WithdrawalCancelledEvent): void
     withdrawal.cancelTimestamp = timestamp;
     withdrawal.cancelTransactionHash = transactionHash;
     withdrawal.cancelLogIndex = logIndex;
+    withdrawal.status = 'cancelled';
 
     withdrawal.save();
 
@@ -271,6 +272,7 @@ export function handleWithdrawalFinalized(event: WithdrawalFinalizedEvent): void
     withdrawal.finalizeTimestamp = timestamp;
     withdrawal.finalizeTransactionHash = transactionHash;
     withdrawal.finalizeLogIndex = logIndex;
+    withdrawal.status = 'complete';
 
     withdrawal.save();
 
@@ -312,6 +314,9 @@ export function handleWithdrawalRequested(event: WithdrawalRequestedEvent): void
     withdrawal.requestTimestamp = timestamp;
     withdrawal.requestTransactionHash = transactionHash;
     withdrawal.requestLogIndex = logIndex;
+
+    // Set status: "pending" if still in timelock, "ready" if timelock has passed
+    withdrawal.status = timestamp >= withdrawableTimestamp ? 'ready' : 'pending';
 
     withdrawal.save();
 
@@ -411,6 +416,7 @@ function getPayerRegistryWithdrawal(transactionHash: string, logIndex: BigInt): 
     withdrawal.finalizeTimestamp = 0;
     withdrawal.finalizeTransactionHash = '';
     withdrawal.finalizeLogIndex = BigInt.fromI32(0);
+    withdrawal.status = 'pending';
 
     return withdrawal;
 }
