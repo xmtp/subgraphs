@@ -354,7 +354,7 @@ export function handleUpgraded(event: UpgradedEvent): void {
 
 /* ============ Entity Helpers ============ */
 
-function getPayer(address: Address): Payer {
+export function getPayer(address: Address): Payer {
     const id = `Payer-${address.toHexString()}`;
 
     let payer = Payer.load(id);
