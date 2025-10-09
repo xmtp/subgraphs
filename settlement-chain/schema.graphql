@@ -724,6 +724,7 @@ enum HistoryEventType {
     WITHDRAWAL_REQUESTED
     WITHDRAWAL_CANCELLED
     WITHDRAWAL_FINALIZED
+    BRIDGE_DEPOSIT
 }
 
 type History @entity(immutable: true) {
@@ -737,6 +738,8 @@ type History @entity(immutable: true) {
     # Optional fields for specific event types
     withdrawableTimestamp: Timestamp
     relatedWithdrawal: PayerRegistryWithdrawal
+    # For bridge deposits: the recipient address on the app chain
+    recipient: String @index
 }
 
 # ============ PayerReport - Snapshot Interfaces ============ #

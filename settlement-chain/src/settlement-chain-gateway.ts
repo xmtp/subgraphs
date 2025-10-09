@@ -11,58 +11,31 @@ import {
     GatewayTotalDepositedSnapshot,
     GatewayTotalWithdrawalsReceivedSnapshot,
     GatewayWithdrawalsReceivedSnapshot,
+    History,
     ParameterSend,
     SettlementChainGateway,
 } from '../generated/schema';
 
 import {
     Deposit as DepositEvent,
-    Deposit1 as DepositWithoutRecipientOrInboxEvent,
-    Deposit2 as DepositWithoutRecipientEvent,
     InboxUpdated as InboxUpdatedEvent,
     ParametersSent as ParametersSentEvent,
-    ParametersSent1 as ParametersSentWithInboxEvent,
     PauseStatusUpdated as PauseStatusUpdatedEvent,
     WithdrawalReceived as WithdrawalReceivedEvent,
     Upgraded as UpgradedEvent,
 } from '../generated/SettlementChainGateway/SettlementChainGateway';
 
 import { getAccount } from './common';
+import { getPayer } from './payer-registry';
 
 const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
 
 /* ============ Handlers ============ */
 
-export function handleDepositWithoutRecipientOrInbox(event: DepositWithoutRecipientOrInboxEvent): void {
-    handleSomeDeposit(
-        event.address,
-        '',
-        event.params.amount,
-        event.params.chainId,
-        event.params.messageNumber,
-        event.block.timestamp.toI32(),
-        event.transaction.hash.toHexString(),
-        event.logIndex
-    );
-}
-
-export function handleDepositWithoutRecipient(event: DepositWithoutRecipientEvent): void {
-    handleSomeDeposit(
-        event.address,
-        '',
-        event.params.amount,
-        event.params.chainId,
-        event.params.messageNumber,
-        event.block.timestamp.toI32(),
-        event.transaction.hash.toHexString(),
-        event.logIndex
-    );
-}
-
 export function handleDeposit(event: DepositEvent): void {
     handleSomeDeposit(
         event.address,
-        event.params.recipient.toHexString(),
+        event.transaction.from,
         event.params.amount,
         event.params.chainId,
         event.params.messageNumber,
@@ -74,7 +47,7 @@ export function handleDeposit(event: DepositEvent): void {
 
 function handleSomeDeposit(
     gatewayAddress: Address,
-    recipient: string,
+    sender: Address,
     amount: BigInt,
     chainId: BigInt,
     messageNumber: BigInt,
@@ -92,7 +65,7 @@ function handleSomeDeposit(
 
     const deposit = new GatewayDeposit(`SettlementChainGatewayDeposit-${transactionHash}-${logIndex.toString()}`);
 
-    deposit.recipient = recipient;
+    deposit.recipient = '';  // Recipient is encoded in the cross-chain message
     deposit.amount = amount;
     deposit.chainId = chainId;
     deposit.messageNumber = messageNumber;
@@ -101,54 +74,40 @@ function handleSomeDeposit(
     deposit.logIndex = logIndex;
 
     deposit.save();
-}
 
-export function handleParametersSentWithInbox(event: ParametersSentWithInboxEvent): void {
-    handleParameters(
-        event.address,
-        event.params.keys,
-        event.params.chainId,
-        event.params.messageNumber,
-        event.block.timestamp.toI32(),
-        event.transaction.hash.toHexString(),
-        event.logIndex
-    );
+    // Create History entry for the bridge deposit
+    const payer = getPayer(sender);
+    const historyId = `History-${transactionHash}-${logIndex.toString()}`;
+    const history = new History(historyId);
+
+    history.eventType = "BRIDGE_DEPOSIT";
+    history.payer = payer.id;
+    history.amount = amount;
+    history.timestamp = timestamp;
+    history.transactionHash = transactionHash;
+    history.logIndex = logIndex;
+    history.withdrawableTimestamp = null;
+    history.relatedWithdrawal = null;
+    history.recipient = null;  // Recipient is not available in the event, it's encoded in the message
+
+    history.save();
 }
 
 export function handleParametersSent(event: ParametersSentEvent): void {
-    handleParameters(
-        event.address,
-        event.params.keys,
-        event.params.chainId,
-        event.params.messageNumber,
-        event.block.timestamp.toI32(),
-        event.transaction.hash.toHexString(),
-        event.logIndex
-    );
-}
-
-function handleParameters(
-    gatewayAddress: Address,
-    keys: string[],
-    chainId: BigInt,
-    messageNumber: BigInt,
-    timestamp: i32,
-    transactionHash: string,
-    logIndex: BigInt
-): void {
-    const gateway = getSettlementChainGateway(gatewayAddress);
+    const gateway = getSettlementChainGateway(event.address);
+    const timestamp = event.block.timestamp.toI32();
 
     gateway.lastUpdate = timestamp;
     gateway.save();
 
-    const parameterSend = new ParameterSend(`ParameterSend-${transactionHash}-${logIndex.toString()}`);
+    const parameterSend = new ParameterSend(`ParameterSend-${event.transaction.hash.toHexString()}-${event.logIndex.toString()}`);
 
-    parameterSend.keys = keys;
-    parameterSend.chainId = chainId;
-    parameterSend.messageNumber = messageNumber;
+    parameterSend.keys = event.params.keys;
+    parameterSend.chainId = event.params.chainId;
+    parameterSend.messageNumber = event.params.messageNumber;
     parameterSend.timestamp = timestamp;
-    parameterSend.transactionHash = transactionHash;
-    parameterSend.logIndex = logIndex;
+    parameterSend.transactionHash = event.transaction.hash.toHexString();
+    parameterSend.logIndex = event.logIndex;
 
     parameterSend.save();
 }
