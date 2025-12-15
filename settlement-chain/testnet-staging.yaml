@@ -113,7 +113,7 @@ dataSources:
       network: base-sepolia
       source:
           abi: PayerReportManager
-          address: '0x8644DB92F11fDeCBCBfB5F2Bb84a000f28F7B59c'
+          address: '0x868132030B97457582630456ACBe6bD303F17263'
           startBlock: 29155490
       mapping:
           kind: ethereum/events
