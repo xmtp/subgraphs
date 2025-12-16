@@ -690,6 +690,12 @@
     "name": "UsageSettled",
     "inputs": [
       {
+        "name": "payerReportId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
         "name": "payer",
         "type": "address",
         "indexed": true,
