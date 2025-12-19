@@ -35,6 +35,54 @@ interface BooleanSnapshotEntity implements SnapshotEntity {
     value: Boolean!
 }
 
+# ============ Daily Time Series - Interface ============ #
+
+interface DailyTimeSeriesEntity {
+    id: ID! @unique
+    date: String! @index          # YYYY-MM-DD format
+    dateTimestamp: Timestamp! @index  # Midnight UTC timestamp
+}
+
+# ============ Payer - Daily Time Series ============ #
+
+type DailyPayerUsage implements DailyTimeSeriesEntity @entity(immutable: false) {
+    id: ID! @unique                      # Format: DailyPayerUsage-{payerAddress}-{YYYY-MM-DD}
+    date: String! @index                 # YYYY-MM-DD
+    dateTimestamp: Timestamp! @index     # Midnight UTC timestamp
+    payer: Payer! @index
+
+    # Daily deltas (NOT cumulative)
+    feesSettled: BigInt!                 # Total fees settled this day
+    deposited: BigInt!                   # Total deposited this day
+    withdrawn: BigInt!                   # Total withdrawn this day
+    incurredDebt: BigInt!                # Debt incurred this day
+    repaidDebt: BigInt!                  # Debt repaid this day
+
+    # Metadata
+    eventCount: Int!                     # Number of events this day
+    lastUpdatedBlock: BigInt!            # Last block that updated this entity
+}
+
+# ============ Global - Daily Time Series ============ #
+
+type DailyRegistryUsage implements DailyTimeSeriesEntity @entity(immutable: false) {
+    id: ID! @unique                      # Format: DailyRegistryUsage-{YYYY-MM-DD}
+    date: String! @index                 # YYYY-MM-DD
+    dateTimestamp: Timestamp! @index     # Midnight UTC timestamp
+
+    # Daily deltas (NOT cumulative)
+    totalDeposited: BigInt!              # Total deposited across all payers this day
+    totalWithdrawn: BigInt!              # Total withdrawn across all payers this day
+    totalUsageSettled: BigInt!           # Total usage settled across all payers this day
+    totalIncurredDebt: BigInt!           # Total debt incurred this day
+    totalRepaidDebt: BigInt!             # Total debt repaid this day
+    totalExcessTransferred: BigInt!      # Total excess transferred this day
+
+    # Metadata
+    eventCount: Int!                     # Total events this day
+    lastUpdatedBlock: BigInt!            # Last block that updated this entity
+}
+
 # ============ Payer - Snapshot Interfaces ============ #
 
 interface PayerSnapshotEntity implements SnapshotEntity {
@@ -161,6 +209,9 @@ type Payer @entity(immutable: false) {
     withdrawals: [PayerRegistryWithdrawal!] @derivedFrom(field: "payer")
     usageSettlements: [PayerRegistryUsageSettlement!] @derivedFrom(field: "payer")
     history: [History!] @derivedFrom(field: "payer")
+
+    # Daily Time Series
+    dailyUsage: [DailyPayerUsage!] @derivedFrom(field: "payer")
 }
 
 # ============ PayerRegistry - Snapshot Interfaces ============ #

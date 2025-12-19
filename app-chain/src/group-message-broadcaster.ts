@@ -27,7 +27,13 @@ import {
     Upgraded as UpgradedEvent,
 } from '../generated/GroupMessageBroadcaster/GroupMessageBroadcaster';
 
-import { ZERO_ADDRESS, getAccount, updateAccountFeesSnapshot } from './common';
+import {
+    ZERO_ADDRESS,
+    getAccount,
+    updateAccountFeesSnapshot,
+    upsertDailyAccountUsage,
+    upsertDailyGlobalUsage,
+} from './common';
 
 const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
 
@@ -54,6 +60,26 @@ export function handleMessageSent(event: MessageSentEvent): void {
 
     account.fees = account.fees.plus(transactionFee);
     updateAccountFeesSnapshot(account, timestamp, account.fees);
+
+    // Update daily time series
+    const dailyAccountUsage = upsertDailyAccountUsage(account, timestamp, event.block.number);
+    dailyAccountUsage.groupMessagesSent = dailyAccountUsage.groupMessagesSent.plus(BigInt.fromI32(1));
+    dailyAccountUsage.groupMessageBytesSent = dailyAccountUsage.groupMessageBytesSent.plus(
+        BigInt.fromI32(messageLength)
+    );
+    dailyAccountUsage.groupMessageFees = dailyAccountUsage.groupMessageFees.plus(transactionFee);
+    dailyAccountUsage.totalFees = dailyAccountUsage.totalFees.plus(transactionFee);
+    dailyAccountUsage.eventCount += 1;
+    dailyAccountUsage.save();
+
+    const dailyGlobalUsage = upsertDailyGlobalUsage(timestamp, event.block.number);
+    dailyGlobalUsage.totalGroupMessagesSent = dailyGlobalUsage.totalGroupMessagesSent.plus(BigInt.fromI32(1));
+    dailyGlobalUsage.totalGroupMessageBytesSent = dailyGlobalUsage.totalGroupMessageBytesSent.plus(
+        BigInt.fromI32(messageLength)
+    );
+    dailyGlobalUsage.totalGroupMessageFees = dailyGlobalUsage.totalGroupMessageFees.plus(transactionFee);
+    dailyGlobalUsage.eventCount += 1;
+    dailyGlobalUsage.save();
 
     account.lastUpdate = timestamp;
     account.save();
