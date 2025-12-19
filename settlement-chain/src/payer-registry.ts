@@ -48,7 +48,12 @@ import {
     Upgraded as UpgradedEvent,
 } from '../generated/PayerRegistry/PayerRegistry';
 
-import { getPayerRegistry, _updatePayerRegistryTotalWithdrawable } from './common';
+import {
+    getPayerRegistry,
+    upsertDailyPayerUsage,
+    upsertDailyRegistryUsage,
+    _updatePayerRegistryTotalWithdrawable,
+} from './common';
 
 /* ============ Handlers ============ */
 
@@ -59,6 +64,17 @@ export function handleDeposit(event: DepositEvent): void {
     const payer = getPayer(event.params.payer);
 
     _deposit(payerRegistry, payer, amount, timestamp);
+
+    // Update daily time series
+    const dailyPayerUsage = upsertDailyPayerUsage(payer, timestamp, event.block.number);
+    dailyPayerUsage.deposited = dailyPayerUsage.deposited.plus(amount);
+    dailyPayerUsage.eventCount += 1;
+    dailyPayerUsage.save();
+
+    const dailyRegistryUsage = upsertDailyRegistryUsage(timestamp, event.block.number);
+    dailyRegistryUsage.totalDeposited = dailyRegistryUsage.totalDeposited.plus(amount);
+    dailyRegistryUsage.eventCount += 1;
+    dailyRegistryUsage.save();
 
     payerRegistry.lastUpdate = timestamp;
     payerRegistry.save();
@@ -170,6 +186,17 @@ export function handleUsageSettled(event: UsageSettledEvent): void {
 
     _settleUsage(payerRegistry, payer, amount, timestamp);
 
+    // Update daily time series
+    const dailyPayerUsage = upsertDailyPayerUsage(payer, timestamp, event.block.number);
+    dailyPayerUsage.feesSettled = dailyPayerUsage.feesSettled.plus(amount);
+    dailyPayerUsage.eventCount += 1;
+    dailyPayerUsage.save();
+
+    const dailyRegistryUsage = upsertDailyRegistryUsage(timestamp, event.block.number);
+    dailyRegistryUsage.totalUsageSettled = dailyRegistryUsage.totalUsageSettled.plus(amount);
+    dailyRegistryUsage.eventCount += 1;
+    dailyRegistryUsage.save();
+
     payerRegistry.lastUpdate = timestamp;
     payerRegistry.save();
 
@@ -262,6 +289,17 @@ export function handleWithdrawalFinalized(event: WithdrawalFinalizedEvent): void
     if (!withdrawal) throw new Error('No pending withdrawal');
 
     _finalizeWithdrawal(payerRegistry, payer, withdrawal, timestamp);
+
+    // Update daily time series
+    const dailyPayerUsage = upsertDailyPayerUsage(payer, timestamp, event.block.number);
+    dailyPayerUsage.withdrawn = dailyPayerUsage.withdrawn.plus(withdrawal.amount);
+    dailyPayerUsage.eventCount += 1;
+    dailyPayerUsage.save();
+
+    const dailyRegistryUsage = upsertDailyRegistryUsage(timestamp, event.block.number);
+    dailyRegistryUsage.totalWithdrawn = dailyRegistryUsage.totalWithdrawn.plus(withdrawal.amount);
+    dailyRegistryUsage.eventCount += 1;
+    dailyRegistryUsage.save();
 
     payerRegistry.lastUpdate = timestamp;
     payerRegistry.save();
