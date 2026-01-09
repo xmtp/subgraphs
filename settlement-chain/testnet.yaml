@@ -8,7 +8,7 @@ dataSources:
       source:
           abi: PayerRegistry
           address: '0xF0bd6Ac8AA00BA083cF95C5438B33488cbd2562B'
-          startBlock: 26900619
+          startBlock: 29322100
       context:
           startingImplementation:
               type: String
@@ -67,7 +67,7 @@ dataSources:
                 handler: handlePauseStatusUpdated
               - event: SettlerUpdated(indexed address)
                 handler: handleSettlerUpdated
-              - event: UsageSettled(indexed address,uint96)
+              - event: UsageSettled(indexed bytes32,indexed address,uint96)
                 handler: handleUsageSettled
               - event: WithdrawLockPeriodUpdated(uint32)
                 handler: handleWithdrawLockPeriodUpdated
@@ -84,8 +84,8 @@ dataSources:
       source:
           abi: FeeToken
           address: '0x63C6667798fdA65E2E29228C43fbfDa0Cd4634A8'
-          startBlock: 26900619
-          endBlock: 26900619 # Remove this when this is FeeToken/xUSD.
+          startBlock: 29322100
+          endBlock: 29322100 # Remove this when this is FeeToken/xUSD.
       context:
           payerRegistry:
               type: String
@@ -113,7 +113,7 @@ dataSources:
       network: base-sepolia
       source:
           abi: PayerReportManager
-          address: '0x9EC340209b54C661ceFF468B70fF8122ff9D009e'
+          address: '0x9de0b8C883c01F28A0F3d39De90c098F0941176f'
           startBlock: 29322114
       mapping:
           kind: ethereum/events
@@ -133,3 +133,43 @@ dataSources:
               - event: PayerReportSubsetSettled(indexed uint32,indexed uint256,uint32,uint32,uint96)
                 handler: handlePayerReportSubsetSettled
           file: ./src/payer-report-manager.ts
+    - kind: ethereum
+      name: SettlementChainGateway
+      network: base-sepolia
+      source:
+          abi: SettlementChainGateway
+          address: '0xB64D5bF62F30512Bd130C0D7c80DB7ac1e6801a3'
+          startBlock: 29322114
+      context:
+          startingImplementation:
+              type: String
+              data: '0xB64D5bF62F30512Bd130C0D7c80DB7ac1e6801a3'
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.9
+          language: wasm/assemblyscript
+          entities:
+              - History
+              - Account
+              - GatewayDeposit
+              - GatewayReceivedWithdrawal
+              - GatewayInbox
+              - ParameterSend
+              - SettlementChainGateway
+          abis:
+              - name: SettlementChainGateway
+                file: ./abis/SettlementChainGateway.abi.json
+          eventHandlers:
+              - event: Deposit(indexed uint256,indexed uint256,uint256)
+                handler: handleDeposit
+              - event: InboxUpdated(indexed uint256,indexed address)
+                handler: handleInboxUpdated
+              - event: ParametersSent(indexed uint256,indexed uint256,uint256,string[])
+                handler: handleParametersSent
+              - event: PauseStatusUpdated(indexed bool)
+                handler: handlePauseStatusUpdated
+              - event: WithdrawalReceived(indexed address,uint256)
+                handler: handleWithdrawalReceived
+              - event: Upgraded(indexed address)
+                handler: handleUpgraded
+          file: ./src/settlement-chain-gateway.ts

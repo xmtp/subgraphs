@@ -8,7 +8,7 @@ dataSources:
       source:
           abi: PayerRegistry
           address: '0x208E94fbC9833B58765fedC30CFF8539C6356e88'
-          startBlock: 26900619
+          startBlock: 29155490
       context:
           startingImplementation:
               type: String
@@ -67,7 +67,7 @@ dataSources:
                 handler: handlePauseStatusUpdated
               - event: SettlerUpdated(indexed address)
                 handler: handleSettlerUpdated
-              - event: UsageSettled(indexed address,uint96)
+              - event: UsageSettled(indexed bytes32,indexed address,uint96)
                 handler: handleUsageSettled
               - event: WithdrawLockPeriodUpdated(uint32)
                 handler: handleWithdrawLockPeriodUpdated
@@ -84,8 +84,8 @@ dataSources:
       source:
           abi: FeeToken
           address: '0x63C6667798fdA65E2E29228C43fbfDa0Cd4634A8'
-          startBlock: 26900619
-          endBlock: 26900619 # Remove this when this is FeeToken/xUSD.
+          startBlock: 29155490
+          endBlock: 29155490 # Remove this when this is FeeToken/xUSD.
       context:
           payerRegistry:
               type: String
@@ -113,7 +113,7 @@ dataSources:
       network: base-sepolia
       source:
           abi: PayerReportManager
-          address: '0x8644DB92F11fDeCBCBfB5F2Bb84a000f28F7B59c'
+          address: '0x868132030B97457582630456ACBe6bD303F17263'
           startBlock: 29155490
       mapping:
           kind: ethereum/events

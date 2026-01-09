@@ -9,21 +9,26 @@
 
 ## Environment Setup
 - Node version: v20.19.5+ (engines.node: ">=23.2.0" in package.json)
-- Graph CLI: 0.97.1
-- Each subproject has `.env` files with DEPLOY_KEY and VERSION_LABEL
+- Graph CLI: 0.97.1 (for codegen and build)
+- Goldsky CLI: 3.1.0+ (for deployment)
+- Each subproject has `.env` files with:
+  - `VERSION_LABEL`: Semantic version for deployment (e.g., v0.2.5)
+  - `GOLDSKY`: API key for Goldsky authentication
+  - `PROJECT_ID`: Goldsky project identifier
 
 ## Environment Differences
 
-### testnet-dev vs testnet
-- **testnet-dev**: Development environment with test contract addresses, used for active development
-- **testnet**: Production testnet environment with different (production-ready) contract addresses
-- **testnet-staging**: Intermediate staging environment (settlement-chain only)
+### testnet-staging vs testnet
+- **testnet-staging**: Staging environment for testing before production deployment
+- **testnet**: Production testnet environment with production-ready contract addresses
 
 Key differences in contract addresses:
-- **App-chain**: Only has testnet-dev config (single environment)
-- **Settlement-chain**: Has all three environments with different PayerRegistry addresses:
-  - testnet-dev: `0x77a9129Cb584DF076a64A995dDEF9158d589D80c`
-  - testnet: `0x2B019EAfE0910a16394D78f3E930bB4c946B5E9e`
+- **App-chain**:
+  - testnet-staging: GroupMessageBroadcaster `0xdEB68688Fcc514b69078f2cCf0a6D2746548b368`, IdentityUpdateBroadcaster `0xe946A8e2DE66827e1834BA3c24D7f94c98249152`
+  - testnet: GroupMessageBroadcaster `0x6619B1c95eb10d339903E4AA9938314d6E711d17`, IdentityUpdateBroadcaster `0xD49DCDd95Ce435eaB2E53DBfcBceF5cAAc78D95a`
+- **Settlement-chain**:
+  - testnet-staging: PayerRegistry `0x208E94fbC9833B58765fedC30CFF8539C6356e88`
+  - testnet: PayerRegistry `0xF0bd6Ac8AA00BA083cF95C5438B33488cbd2562B`
 
 ## Common Commands
 
@@ -36,20 +41,36 @@ cd app-chain  # or settlement-chain
 yarn install
 
 # Code generation (choose environment)
-yarn codegen:testnet-dev    # Development environment
-yarn codegen:testnet-staging  # Staging (settlement-chain only)
-yarn codegen:testnet        # Production testnet
+yarn codegen:testnet-staging  # Staging environment
+yarn codegen:testnet          # Production testnet
 
 # Build subgraph
-yarn build:testnet-dev      # Development environment
-yarn build:testnet-staging  # Staging (settlement-chain only)
-yarn build:testnet         # Production testnet
+yarn build:testnet-staging    # Staging environment
+yarn build:testnet            # Production testnet
 
-# Deploy to Alchemy hosted service
-yarn deploy:testnet-dev     # Development environment
-yarn deploy:testnet-staging # Staging (settlement-chain only)
-yarn deploy:testnet        # Production testnet
+# Deploy to Goldsky
+yarn deploy:testnet-staging   # Deploys and tags with 'stable'
+yarn deploy:testnet           # Deploys and tags with 'stable'
 ```
+
+### How Deployment Works
+
+Deployments use Goldsky's versioning and tagging system:
+
+1. **Version**: Each deployment has a version (e.g., `v0.2.5`) specified in `.env`
+2. **Tag**: A stable tag (`stable`) is automatically created/updated to point to the deployed version
+3. **Endpoint**: Frontend always uses the tagged endpoint (e.g., `/stable/gn`), which never changes
+
+**Example**: When you run `yarn deploy:testnet-staging`:
+- Deploys `settlement-chain-testnet-staging/v0.2.5`
+- Creates/updates tag `stable` to point to `v0.2.5`
+- GraphQL endpoint: `https://api.goldsky.com/.../subgraphs/settlement-chain-testnet-staging/stable/gn`
+
+When deploying a new version (e.g., `v0.2.6`):
+- Update `VERSION_LABEL=v0.2.6` in `.env`
+- Run `yarn deploy:testnet-staging`
+- The `stable` tag automatically moves to `v0.2.6`
+- Frontend continues using the same endpoint URL
 
 ### Local Development:
 ```bash
@@ -65,36 +86,34 @@ yarn remove-local
 
 ## Deployment Configuration
 
-### Query Endpoints
-Use these **stable endpoints** that automatically point to the latest promoted version:
+### GraphQL Query Endpoints
 
-#### App-Chain Subgraph (testnet-dev):
-- **Stable Endpoint**: https://subgraph.satsuma-prod.com/ephemerahq/app-chain-testnet-dev/api
-- **Network**: xmtp-ropsten
-- **Config**: testnet-dev.yaml
+Use these **stable tagged endpoints** in your frontend applications. These URLs never change, even when deploying new subgraph versions.
 
-#### Settlement-Chain Subgraph (testnet-dev):
-- **Stable Endpoint**: https://subgraph.satsuma-prod.com/ephemerahq/settlement-chain-testnet-dev/api
+#### Settlement-Chain Subgraph (Base Sepolia)
+- **testnet-staging**: `https://api.goldsky.com/api/public/project_cmh3prjsr002wr4p22cdshlhh/subgraphs/settlement-chain-testnet-staging/stable/gn`
+- **testnet**: `https://api.goldsky.com/api/public/project_cmh3prjsr002wr4p22cdshlhh/subgraphs/settlement-chain-testnet/stable/gn`
 - **Network**: base-sepolia
-- **Config**: testnet-dev.yaml
+- **Current Version**: v0.2.5
 
-### Environment-specific Endpoints
-- **testnet-dev**: Currently active development environment (endpoints above)
-- **testnet-staging**: https://subgraph.satsuma-prod.com/ephemerahq/settlement-chain-testnet-staging/api (settlement-chain only)
-- **testnet**: https://subgraph.satsuma-prod.com/ephemerahq/settlement-chain-testnet/api (settlement-chain only)
+#### App-Chain Subgraph (XMTP Ropsten)
+- **testnet-staging**: `https://api.goldsky.com/api/public/project_cmh3prjsr002wr4p22cdshlhh/subgraphs/app-chain-testnet-staging/stable/gn`
+- **testnet**: `https://api.goldsky.com/api/public/project_cmh3prjsr002wr4p22cdshlhh/subgraphs/app-chain-testnet/stable/gn`
+- **Network**: xmtp-ropsten (Chain ID: 351243127)
+- **Current Version**: v0.2.4
+- **RPC**: xmtp-ropsten.g.alchemy.com/v2/VB4wowVdpg22Obz-gjoUhGJnGbjC67eN
 
-⚠️ **Important**: Always use the stable endpoints (without `/version/xxx`) for integration. Version-specific URLs change with each deployment.
+⚠️ **Important**: Always use the `/stable/gn` tagged endpoints. Never hardcode version numbers in your frontend code.
 
 ## Key Configuration Files
-- `testnet-dev.yaml` - Development environment configuration
 - `testnet-staging.yaml` - Staging environment configuration
 - `testnet.yaml` - Production testnet configuration
-- `.env` - Contains DEPLOY_KEY and VERSION_LABEL
+- `.env` - Contains VERSION_LABEL, GOLDSKY API key, and PROJECT_ID
 
 ## Deployment Infrastructure
-- **IPFS**: https://ipfs.satsuma.xyz
-- **Deploy Node**: https://subgraphs.alchemy.com/api/subgraphs/deploy
-- **Hosted Service**: Alchemy Subgraphs (Satsuma)
+- **Indexer**: Goldsky
+- **CLI**: @goldskycom/cli (via yarn)
+- **Project ID**: project_cmh3prjsr002wr4p22cdshlhh
 
 ## Data Tracked
 
@@ -123,8 +142,24 @@ yarn test
 yarn prettier
 ```
 
-## Recent Deployment Notes
-- Successfully deployed both subgraphs on Sep 16, 2025
-- Using version label: v0.1.1-testnet
-- Subgraphs are ready for funding portal integration
-- May take 10-15 minutes for initial sync after deployment
+## Troubleshooting
+
+### App-Chain Custom Network
+If you encounter "Subgraph network not supported: no network xmtp-ropsten found" error:
+- The xmtp-ropsten network (Chain ID: 351243127) must be configured in Goldsky
+- Contact Goldsky support if the network is not available
+- Provide: Chain ID 351243127 and RPC endpoint details
+
+### Version Already Exists
+If deployment fails with "You've already deployed this subgraph under the name X/vY.Z":
+- This typically means the subgraph content hash is identical to an existing deployment
+- Either make changes to the subgraph code, or
+- Update the `stable` tag to point to the existing version:
+  ```bash
+  yarn goldsky subgraph tag create <name>/<version> --tag stable --token <API_KEY>
+  ```
+
+### Deployment Takes Time
+- Initial deployment and indexing can take 10-15 minutes
+- The subgraph needs to sync with the blockchain from the startBlock specified in the yaml config
+- Check Goldsky dashboard for indexing progress

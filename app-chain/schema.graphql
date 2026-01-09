@@ -35,6 +35,69 @@ interface BooleanSnapshotEntity implements SnapshotEntity {
     value: Boolean!
 }
 
+# ============ Daily Time Series - Interface ============ #
+
+interface DailyTimeSeriesEntity {
+    id: ID! @unique
+    date: String! @index          # YYYY-MM-DD format
+    dateTimestamp: Timestamp! @index  # Midnight UTC timestamp
+}
+
+# ============ Account - Daily Time Series ============ #
+
+type DailyAccountUsage implements DailyTimeSeriesEntity @entity(immutable: false) {
+    id: ID! @unique                      # Format: DailyAccountUsage-{accountAddress}-{YYYY-MM-DD}
+    date: String! @index                 # YYYY-MM-DD
+    dateTimestamp: Timestamp! @index     # Midnight UTC timestamp
+    account: Account! @index
+
+    # Daily deltas for group messages (NOT cumulative)
+    groupMessagesSent: BigInt!           # Messages sent this day
+    groupMessageBytesSent: BigInt!       # Bytes sent this day
+    groupMessageFees: BigInt!            # Gas fees for messages this day
+
+    # Daily deltas for identity updates (NOT cumulative)
+    identityUpdatesCreated: BigInt!      # Identity updates this day
+    identityUpdateBytesCreated: BigInt!  # Identity update bytes this day
+    identityUpdateFees: BigInt!          # Gas fees for identity updates this day
+
+    # Daily deltas for cross-chain operations
+    depositsReceived: BigInt!            # Deposits received this day
+
+    # Aggregated daily fees
+    totalFees: BigInt!                   # Total gas fees this day
+
+    # Metadata
+    eventCount: Int!                     # Number of events this day
+    lastUpdatedBlock: BigInt!            # Last block that updated this entity
+}
+
+# ============ Global - Daily Time Series ============ #
+
+type DailyGlobalUsage implements DailyTimeSeriesEntity @entity(immutable: false) {
+    id: ID! @unique                      # Format: DailyGlobalUsage-{YYYY-MM-DD}
+    date: String! @index                 # YYYY-MM-DD
+    dateTimestamp: Timestamp! @index     # Midnight UTC timestamp
+
+    # Daily deltas for group messages (NOT cumulative)
+    totalGroupMessagesSent: BigInt!
+    totalGroupMessageBytesSent: BigInt!
+    totalGroupMessageFees: BigInt!
+
+    # Daily deltas for identity updates (NOT cumulative)
+    totalIdentityUpdatesCreated: BigInt!
+    totalIdentityUpdateBytesCreated: BigInt!
+    totalIdentityUpdateFees: BigInt!
+
+    # Daily deltas for cross-chain operations
+    totalDepositsReceived: BigInt!
+    totalWithdrawn: BigInt!
+
+    # Metadata
+    eventCount: Int!                     # Total events this day
+    lastUpdatedBlock: BigInt!            # Last block that updated this entity
+}
+
 # ============ Account - Snapshot Interfaces ============ #
 
 interface AccountSnapshotEntity implements SnapshotEntity {
@@ -164,6 +227,9 @@ type Account @entity(immutable: false) {
     groupMessages: [GroupMessage!] @derivedFrom(field: "account")
     identityUpdates: [IdentityUpdate!] @derivedFrom(field: "account")
     receivedDeposits: [ReceivedDeposit!] @derivedFrom(field: "recipient")
+
+    # Daily Time Series
+    dailyUsage: [DailyAccountUsage!] @derivedFrom(field: "account")
 }
 
 # ============ GroupMessageBroadcaster - Snapshot Interfaces ============ #

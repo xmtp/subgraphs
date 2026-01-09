@@ -27,7 +27,13 @@ import {
     Upgraded as UpgradedEvent,
 } from '../generated/IdentityUpdateBroadcaster/IdentityUpdateBroadcaster';
 
-import { ZERO_ADDRESS, getAccount, updateAccountFeesSnapshot } from './common';
+import {
+    ZERO_ADDRESS,
+    getAccount,
+    updateAccountFeesSnapshot,
+    upsertDailyAccountUsage,
+    upsertDailyGlobalUsage,
+} from './common';
 
 const STARTING_IMPLEMENTATION = dataSource.context().getString('startingImplementation');
 /* ============ Handlers ============ */
@@ -53,6 +59,26 @@ export function handleIdentityUpdateCreated(event: IdentityUpdateCreatedEvent): 
 
     account.fees = account.fees.plus(transactionFee);
     updateAccountFeesSnapshot(account, timestamp, account.fees);
+
+    // Update daily time series
+    const dailyAccountUsage = upsertDailyAccountUsage(account, timestamp, event.block.number);
+    dailyAccountUsage.identityUpdatesCreated = dailyAccountUsage.identityUpdatesCreated.plus(BigInt.fromI32(1));
+    dailyAccountUsage.identityUpdateBytesCreated = dailyAccountUsage.identityUpdateBytesCreated.plus(
+        BigInt.fromI32(updateLength)
+    );
+    dailyAccountUsage.identityUpdateFees = dailyAccountUsage.identityUpdateFees.plus(transactionFee);
+    dailyAccountUsage.totalFees = dailyAccountUsage.totalFees.plus(transactionFee);
+    dailyAccountUsage.eventCount += 1;
+    dailyAccountUsage.save();
+
+    const dailyGlobalUsage = upsertDailyGlobalUsage(timestamp, event.block.number);
+    dailyGlobalUsage.totalIdentityUpdatesCreated = dailyGlobalUsage.totalIdentityUpdatesCreated.plus(BigInt.fromI32(1));
+    dailyGlobalUsage.totalIdentityUpdateBytesCreated = dailyGlobalUsage.totalIdentityUpdateBytesCreated.plus(
+        BigInt.fromI32(updateLength)
+    );
+    dailyGlobalUsage.totalIdentityUpdateFees = dailyGlobalUsage.totalIdentityUpdateFees.plus(transactionFee);
+    dailyGlobalUsage.eventCount += 1;
+    dailyGlobalUsage.save();
 
     account.lastUpdate = timestamp;
     account.save();
