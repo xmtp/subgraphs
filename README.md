@@ -9,7 +9,7 @@ This repository contains subgraphs for event listening of XMTP smart contracts r
 -   **[The Graph Protocol](https://thegraph.com/)**: Decentralized indexing protocol for organizing blockchain data.
 -   **[Graph CLI](https://github.com/graphprotocol/graph-cli)**: Command-line interface for developing and deploying subgraphs.
 -   **[AssemblyScript](https://www.assemblyscript.org/)**: A TypeScript-like language compiled to WebAssembly, used for writing subgraph mapping logic.
--   **[Alchemy Subgraphs](https://www.alchemy.com/subgraphs)**: Hosted service for subgraph deployment and querying.
+-   **[Goldsky](https://goldsky.com/)**: Hosted service currently used for subgraph deployment and querying (see CLAUDE.md for endpoint details). Note: `appchain-contracts/` and `settlement-chain-contracts/` contain an earlier, unmaintained Alchemy-based prototype and are not the active deployment target.
 
 ## Repository Structure
 
@@ -62,10 +62,11 @@ npm install
 yarn install
 ```
 
-3.  **Configure Environment Variables:** Create a `.env` file in the relevant subgraph project (`settlement-chain-contracts` or `appchain-contracts`) and add your Alchemy deploy key and a version label:
+3.  **Configure Environment Variables:** Create a `.env` file in the relevant subgraph project (`app-chain` or `settlement-chain`) and add your Goldsky API key, project ID, and a version label:
 
 ```text
-DEPLOY_KEY=YOUR_ALCHEMY_DEPLOY_KEY
+GOLDSKY=YOUR_GOLDSKY_API_KEY
+PROJECT_ID=YOUR_GOLDSKY_PROJECT_ID
 VERSION_LABEL=v0.3.0
 ```
 
@@ -75,7 +76,7 @@ TODO
 
 ## Querying Data
 
-Once your subgraphs are deployed and synced, you can query their data using GraphQL. Alchemy provides a dedicated GraphQL API endpoint for each deployed subgraph. You can find this endpoint on your subgraph's dashboard in the Alchemy UI.
+Once your subgraphs are deployed and synced, you can query their data using GraphQL. Goldsky provides a stable, tagged GraphQL API endpoint for each deployed subgraph (see `CLAUDE.md` for the current endpoint URLs). Always use the `/stable/gn` tagged endpoint rather than a versioned one.
 
 ## License
 

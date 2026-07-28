@@ -1,3 +1,5 @@
+> **Warning: Deprecated/unused prototype.** This project is not the active deployment target. See the root README for the active Goldsky-based subgraphs in `app-chain/` and `settlement-chain/`.
+
 # XMTP Appchain Subgraph
 
 This subgraph indexes events from the XMTP Payer Portal contracts deployed on XMTP Sepolia (appchain). It provides comprehensive data for message tracking, usage analytics, and bridge operations.
