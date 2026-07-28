@@ -1,3 +1,5 @@
+> **Warning: Deprecated/unused prototype.** This project is not the active deployment target. See the root README for the active Goldsky-based subgraphs in `app-chain/` and `settlement-chain/`.
+
 # XMTP Settlement Chain Subgraph
 
 This subgraph indexes events from the XMTP Payer Portal contracts deployed on Base Sepolia (settlement chain). It provides comprehensive data for balance tracking, transaction history, rate management, and bridge operations.

@@ -4,7 +4,7 @@ This document describes the branch-based deployment strategy for the subgraphs p
 
 ## Overview
 
-The subgraphs repository uses a **branch-based deployment flow** that corresponds to smart contract environments and frontend deployments. Each branch deploys to a specific subgraph instance on Alchemy/Satsuma.
+The subgraphs repository uses a **branch-based deployment flow** that corresponds to smart contract environments and frontend deployments. Each branch deploys to a specific subgraph instance on Goldsky.
 
 ## Branch Structure
 
@@ -250,22 +250,23 @@ Always increment version when deploying to the same environment to avoid "versio
 
 ## Subgraph Endpoints
 
+Deployments currently target **Goldsky** (see `CLAUDE.md` for full endpoint and project details).
+
 ### Testnet-Staging
 
-- **App Chain**: `https://subgraph.satsuma-prod.com/a046fea75687/ephemerahq/app-chain-testnet-staging/api`
-- **Settlement Chain**: `https://subgraph.satsuma-prod.com/a046fea75687/ephemerahq/settlement-chain-testnet-staging/api`
+- **App Chain**: `https://api.goldsky.com/api/public/project_cmh3prjsr002wr4p22cdshlhh/subgraphs/app-chain-testnet-staging/stable/gn`
+- **Settlement Chain**: `https://api.goldsky.com/api/public/project_cmh3prjsr002wr4p22cdshlhh/subgraphs/settlement-chain-testnet-staging/stable/gn`
 
 ### Testnet (Production Testnet)
 
-- **App Chain**: `https://subgraph.satsuma-prod.com/a046fea75687/ephemerahq/app-chain-testnet/api`
-- **Settlement Chain**: `https://subgraph.satsuma-prod.com/a046fea75687/ephemerahq/settlement-chain-testnet/api`
+- **App Chain**: `https://api.goldsky.com/api/public/project_cmh3prjsr002wr4p22cdshlhh/subgraphs/app-chain-testnet/stable/gn`
+- **Settlement Chain**: `https://api.goldsky.com/api/public/project_cmh3prjsr002wr4p22cdshlhh/subgraphs/settlement-chain-testnet/stable/gn`
 
 ### Mainnet (Production)
 
-- **App Chain**: `https://subgraph.satsuma-prod.com/a046fea75687/ephemerahq/app-chain-mainnet/api`
-- **Settlement Chain**: `https://subgraph.satsuma-prod.com/a046fea75687/ephemerahq/settlement-chain-mainnet/api`
+- Not yet deployed. Mainnet endpoints will follow the same Goldsky `/stable/gn` pattern once available.
 
-**Note**: Always use stable endpoints (without `/version/xxx`) for frontend integration.
+**Note**: Always use stable endpoints (`/stable/gn`, without a version number) for frontend integration.
 
 ## Common Commands Reference
 
